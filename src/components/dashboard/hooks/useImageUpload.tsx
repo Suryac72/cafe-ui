@@ -3,19 +3,13 @@ import { useMutation, useQueryClient } from "react-query";
 const useImageUpload = () => {
   const queryClient = useQueryClient();
 
-  const uploadImage = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
+  const uploadImage = async (file: FormData) => {
     try {
       const response = await fetch(
         "https://api.cloudinary.com/v1_1/talk-addictive/image/upload",
         {
           method: "POST",
-          headers: {
-            Authorization: "Basic 159376523737984:wP509-qjTsLcjzekY1qUTu384qw",
-          },
-          body: formData,
+          body: file,
         }
       );
 
@@ -41,7 +35,7 @@ const useImageUpload = () => {
     },
   });
 
-  const handleUpload = (file: File) => {
+  const handleUpload = (file: FormData) => {
     mutate(file);
   };
 

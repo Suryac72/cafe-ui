@@ -5,16 +5,19 @@ import React from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Home from "./components/home/home";
 import { QueryClient, QueryClientProvider } from "react-query";
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
-    //   errorElement: <ErrorPage />
   },
   {
     path: "/dashboard",
     element: <Dashboard />,
-    //   errorElement: <ErrorPage />
+  },
+  {
+    path: "/profile",
+    element: <></>,
   },
 ]);
 const queryClient = new QueryClient();

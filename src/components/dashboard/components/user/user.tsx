@@ -13,20 +13,24 @@ import {
   CircularProgress,
   Backdrop,
   AlertColor,
+  Chip,
 } from "@mui/material";
-import { useCategory } from "../../../hooks/useCategory";
-import Toaster from "../../toaster/toaster";
-import Header from "../../header/header";
-import AddCategoryModal from "../../modal/add-category-modal";
-
-export interface Category {
-  categoryId: number;
-  categoryTitle: string;
-  categoryDescription: string;
+import Toaster from "../../../toaster/toaster";
+import Header from "../../../header/header";
+import { useUsers } from "../../../../hooks/useUsers";
+import Switch from "@mui/material/Switch";
+import { useUpdateUser } from "../../../../hooks/useUpdateUser";
+export interface UserProps {
+  userId: number;
+  userName: string;
+  userEmail: string;
+  userPhoneNo: string;
+  status: string;
+  role: string;
 }
 
-const Category: React.FC = () => {
-  const { categories, isLoading, error } = useCategory();
+const User: React.FC = () => {
+  const { users, isLoading, error } = useUsers();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -34,7 +38,8 @@ const Category: React.FC = () => {
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
-  const [open, setOpen] = useState(false);
+  const { updateUser, isLoading: loading } = useUpdateUser();
+
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#3559E0",
@@ -83,6 +88,27 @@ const Category: React.FC = () => {
     setPage(0);
   };
 
+  const handleSwitchChange = async (status: string, userId: string) => {
+    // Perform API call when the switch is checked
+    try {
+      const formData = {
+        userEmail: userId,
+        status: status,
+      };
+      const responseData = await updateUser(formData);
+      setIsAlert(true);
+      setIsAlert(true);
+      setSeverity("success");
+      setAutoHideDuration(4000);
+      setAlertMessage(responseData?.message || "");
+    } catch (error) {
+      setIsAlert(true);
+      setSeverity("warning");
+      setAutoHideDuration(4000);
+      setAlertMessage(error?.message || "");
+    }
+  };
+
   useEffect(() => {
     if (error) {
       setIsAlert(true);
@@ -96,14 +122,10 @@ const Category: React.FC = () => {
     setIsAlert(false);
   };
 
-  const handleModalClose = () => {
-    setOpen(false);
-  };
-
   return (
     <>
-      {isLoading && (
-        <StyledBackdrop open={isLoading}>
+      {(isLoading || loading) && (
+        <StyledBackdrop open={isLoading || loading}>
           <CircularProgress sx={useStyles.circularProgress} color="inherit" />
         </StyledBackdrop>
       )}
@@ -117,38 +139,63 @@ const Category: React.FC = () => {
         />
       )}
       <Header
-        title="Manage Categories"
-        buttonText="Add Category"
-        onButtonClick={() => setOpen(!open)}
+        title="Manage users"
+        buttonText="Add user"
+        onButtonClick={() => {
+          console.log("clicked");
+        }}
       />
-      <AddCategoryModal open={open} onClose={handleModalClose} />
       <Paper>
         <TableContainer>
           <Table>
             <TableHead>
               <StyledTableRow>
+                <StyledTableCell sx={{ fontSize: 18 }}>User ID</StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Name</StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Email</StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>
-                  Category ID
+                  Contact No
                 </StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Title</StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>
-                  Description
-                </StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Role</StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Status</StyledTableCell>
               </StyledTableRow>
             </TableHead>
             <TableBody>
               {(rowsPerPage > 0
                 ? // eslint-disable-next-line no-unsafe-optional-chaining
-                  categories?.slice(
+                  users?.slice(
                     page * rowsPerPage,
                     page * rowsPerPage + rowsPerPage
                   )
-                : categories
-              )?.map((category: Category) => (
-                <TableRow key={category?.categoryId}>
-                  <TableCell>{category?.categoryId}</TableCell>
-                  <TableCell>{category?.categoryTitle}</TableCell>
-                  <TableCell>{category?.categoryDescription}</TableCell>
+                : users
+              )?.map((user: UserProps) => (
+                <TableRow key={user?.userId}>
+                  <TableCell>{user?.userId}</TableCell>
+                  <TableCell>{user?.userName}</TableCell>
+                  <TableCell>{user?.userEmail}</TableCell>
+                  <TableCell>{user?.userPhoneNo}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user?.role}
+                      size="small"
+                      color={user?.role?.toUpperCase() === "USER" ? "primary" : "success"}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      defaultChecked={
+                        user?.status.toLowerCase() === "true" ? true : false
+                      }
+                      onChange={() =>
+                        handleSwitchChange(
+                          user?.status.toLowerCase() === "true"
+                            ? "false"
+                            : "true",
+                          user.userEmail
+                        )
+                      }
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -157,7 +204,7 @@ const Category: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
           component="div"
-          count={categories?.length}
+          count={users?.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -169,4 +216,4 @@ const Category: React.FC = () => {
   );
 };
 
-export default Category;
+export default User;

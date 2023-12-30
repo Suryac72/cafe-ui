@@ -13,13 +13,15 @@ import {
   CircularProgress,
   Backdrop,
   AlertColor,
+  Chip,
 } from "@mui/material";
-import { useProduct } from "../../../hooks/useProduct";
-import Toaster from "../../toaster/toaster";
-import Header from "../../header/header";
-import { Category } from "./category";
-import AddProductModal from "../../modal/add-product-modal";
-
+import { useProduct } from "../../hooks/useProduct";
+import Toaster from "../../../toaster/toaster";
+import Header from "../../../header/header";
+import { Category } from "../category/category";
+import AddProductModal from "../../../modal/add-product-modal";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 
 export interface ProductProps {
   productId: number;
@@ -41,7 +43,7 @@ const Product: React.FC = () => {
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
-  const [open,setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#3559E0",
@@ -105,7 +107,25 @@ const Product: React.FC = () => {
 
   const handleModalClose = () => {
     setOpen(false);
-  }
+  };
+
+  const handleDelete = async (categoryId: string) => {
+    try {
+      // Delete the bill
+      // await deleteCategory(categoryId);
+
+      // refetch();
+      setIsAlert(true);
+      setSeverity("success");
+      setAutoHideDuration(4000);
+      setAlertMessage("Category deleted successfully");
+    } catch (error) {
+      setIsAlert(true);
+      setSeverity("error");
+      setAutoHideDuration(4000);
+      // setAlertMessage(deleteError?.message || "");
+    }
+  };
 
   return (
     <>
@@ -123,8 +143,12 @@ const Product: React.FC = () => {
           alertMessage={alertMessage}
         />
       )}
-      <Header title="Manage Products" buttonText="Add Product" onButtonClick={()=>setOpen(!open)}/>
-      <AddProductModal open={open} onClose={handleModalClose}/>
+      <Header
+        title="Manage Products"
+        buttonText="Add Product"
+        onButtonClick={() => setOpen(!open)}
+      />
+      <AddProductModal open={open} onClose={handleModalClose} />
       <Paper>
         <TableContainer>
           <Table>
@@ -138,13 +162,12 @@ const Product: React.FC = () => {
                   Description
                 </StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>Price</StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>
-                  Type
-                </StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Type</StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>
                   Availability
                 </StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>Status</StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Actions</StyledTableCell>
               </StyledTableRow>
             </TableHead>
             <TableBody>
@@ -162,8 +185,35 @@ const Product: React.FC = () => {
                   <TableCell>{product?.productDescription}</TableCell>
                   <TableCell>{product?.productPrice}</TableCell>
                   <TableCell>{product?.category?.categoryTitle}</TableCell>
-                  <TableCell>{product?.productAvailability?.toString()}</TableCell>
-                  <TableCell>{product?.status}</TableCell>
+                  <TableCell>
+                    {product?.productAvailability?.toString() === "true"
+                      ? "Yes"
+                      : "No"}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={
+                        product?.status.toLowerCase() === "true"
+                          ? "Active"
+                          : "Inactive"
+                      }
+                      size="medium"
+                      color={
+                        product?.status.toLowerCase() === "true"
+                          ? "success"
+                          : "error"
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <DeleteIcon
+                      style={{ marginRight: 8 }}
+                      onClick={() =>
+                        handleDelete(product?.productId?.toString())
+                      }
+                    />
+                    <EditIcon />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

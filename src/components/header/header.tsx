@@ -5,15 +5,34 @@ interface HeaderProps {
   title: string;
   buttonText?: string;
   onButtonClick?: () => void;
+  icon?: JSX.Element;
+  buttonType?: "button" | "submit" | "reset" | undefined;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, buttonText, onButtonClick }) => {
+const Header: React.FC<HeaderProps> = ({
+  title,
+  buttonText,
+  onButtonClick,
+  icon,
+  buttonType,
+}) => {
   return (
     <Card sx={{ marginBottom: 4 }}>
-      <CardContent style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <CardContent
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Typography variant="h5">{title}</Typography>
-        {buttonText && onButtonClick && (
-          <Button variant="contained" onClick={onButtonClick}>
+        {buttonText  && (
+          <Button
+            variant="contained"
+            onClick={onButtonClick}
+            startIcon={icon}
+            type={buttonType}
+          >
             {buttonText}
           </Button>
         )}

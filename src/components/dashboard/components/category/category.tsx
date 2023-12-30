@@ -13,24 +13,23 @@ import {
   CircularProgress,
   Backdrop,
   AlertColor,
-  Chip,
 } from "@mui/material";
-import Toaster from "../../toaster/toaster";
-import Header from "../../header/header";
-import { useUsers } from "../../../hooks/useUsers";
-import Switch from "@mui/material/Switch";
-import { useUpdateUser } from "../../../hooks/useUpdateUser";
-export interface UserProps {
-  userId: number;
-  userName: string;
-  userEmail: string;
-  userPhoneNo: string;
-  status: string;
-  role: string;
+import { useCategory } from "../../hooks/useCategory";
+import Toaster from "../../../toaster/toaster";
+import Header from "../../../header/header";
+import AddCategoryModal, { UpdateCategory } from "../../../modal/add-category-modal";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from '@mui/icons-material/Edit';
+import { useDeleteCategory } from "../../hooks/useDeleteCategory";
+
+export interface Category {
+  categoryId: number;
+  categoryTitle: string;
+  categoryDescription: string;
 }
 
-const User: React.FC = () => {
-  const { users, isLoading, error } = useUsers();
+const Category: React.FC = () => {
+  const { categories, isLoading, error,refetch } = useCategory();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -38,8 +37,10 @@ const User: React.FC = () => {
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
-  const { updateUser, isLoading: loading } = useUpdateUser();
-
+  const [open, setOpen] = useState(false);
+  const {deleteCategory,isLoading:deleteLoading,error:deleteError} = useDeleteCategory();
+  const [categoryId,setCategoryId] = useState("");
+  const [categoryToUpdate,setCategoryToUpdate] = useState<UpdateCategory>({});
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#3559E0",
@@ -88,27 +89,6 @@ const User: React.FC = () => {
     setPage(0);
   };
 
-  const handleSwitchChange = async (status: string, userId: string) => {
-    // Perform API call when the switch is checked
-    try {
-      const formData = {
-        userEmail: userId,
-        status: status,
-      };
-      const responseData = await updateUser(formData);
-      setIsAlert(true);
-      setIsAlert(true);
-      setSeverity("success");
-      setAutoHideDuration(4000);
-      setAlertMessage(responseData?.message || "");
-    } catch (error) {
-      setIsAlert(true);
-      setSeverity("warning");
-      setAutoHideDuration(4000);
-      setAlertMessage(error?.message || "");
-    }
-  };
-
   useEffect(() => {
     if (error) {
       setIsAlert(true);
@@ -122,10 +102,41 @@ const User: React.FC = () => {
     setIsAlert(false);
   };
 
+  const handleModalClose = () => {
+    setOpen(false);
+  };
+ 
+  const handleDelete = async (categoryId: string) => {
+    try {
+      // Delete the bill
+      await deleteCategory(categoryId);
+
+      refetch();
+      setIsAlert(true);
+      setSeverity("success");
+      setAutoHideDuration(4000);
+      setAlertMessage("Category deleted successfully");
+    } catch (error) {
+      setIsAlert(true);
+      setSeverity("error");
+      setAutoHideDuration(4000);
+      setAlertMessage(deleteError?.message || "");
+    }
+  };
+
+  // const handleEdit = (categoryId:string,category:Category) =>{
+  //   setOpen(!open);
+  //   setCategoryId(categoryId);
+  //   const obj : Category = {
+  //     categoryTitle: category.categoryTitle || "",
+  //     categoryDescription: ca
+  //   }
+  // }
+
   return (
     <>
-      {(isLoading || loading) && (
-        <StyledBackdrop open={isLoading}>
+      {(isLoading || deleteLoading) && (
+        <StyledBackdrop open={(isLoading || deleteLoading)}>
           <CircularProgress sx={useStyles.circularProgress} color="inherit" />
         </StyledBackdrop>
       )}
@@ -139,62 +150,52 @@ const User: React.FC = () => {
         />
       )}
       <Header
-        title="Manage users"
-        buttonText="Add user"
-        onButtonClick={() => {
-          console.log("clicked");
-        }}
+        title="Manage Categories"
+        buttonText="Add Category"
+        onButtonClick={() => {setOpen(!open);setCategoryId("");setCategoryToUpdate({})}}
+      />
+      <AddCategoryModal
+        open={open}
+        onClose={handleModalClose}
+        setOpen={setOpen}
+        categoryIdToUpdate={categoryId}
+        categoryToUpdateFields={categoryToUpdate}
       />
       <Paper>
         <TableContainer>
           <Table>
             <TableHead>
               <StyledTableRow>
-                <StyledTableCell sx={{ fontSize: 18 }}>User ID</StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Name</StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Email</StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>
-                  Contact No
+                  Category ID
                 </StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Role</StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Status</StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Title</StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>
+                  Description
+                </StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>Actions</StyledTableCell>
               </StyledTableRow>
             </TableHead>
             <TableBody>
               {(rowsPerPage > 0
                 ? // eslint-disable-next-line no-unsafe-optional-chaining
-                  users?.slice(
+                  categories?.slice(
                     page * rowsPerPage,
                     page * rowsPerPage + rowsPerPage
                   )
-                : users
-              )?.map((user: UserProps) => (
-                <TableRow key={user?.userId}>
-                  <TableCell>{user?.userId}</TableCell>
-                  <TableCell>{user?.userName}</TableCell>
-                  <TableCell>{user?.userEmail}</TableCell>
-                  <TableCell>{user?.userPhoneNo}</TableCell>
+                : categories
+              )?.map((category: Category) => (
+                <TableRow key={category?.categoryId}>
+                  <TableCell>{category?.categoryId}</TableCell>
+                  <TableCell>{category?.categoryTitle}</TableCell>
+                  <TableCell>{category?.categoryDescription}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={user?.role}
-                      size="small"
-                      color={user?.role?.toUpperCase() === "USER" ? "primary" : "success"}
+                    <DeleteIcon
+                      style={{ marginRight: 8 }}
+                      sx={{cursor:'pointer'}}
+                      onClick={() => handleDelete(category?.categoryId?.toString())}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      defaultChecked={
-                        user?.status.toLowerCase() === "true" ? true : false
-                      }
-                      onChange={() =>
-                        handleSwitchChange(
-                          user?.status.toLowerCase() === "true"
-                            ? "false"
-                            : "true",
-                          user.userEmail
-                        )
-                      }
-                    />
+                    <EditIcon   sx={{cursor:'pointer'}} onClick={() =>{ setOpen(!open);setCategoryToUpdate(category);setCategoryId(category?.categoryId?.toString())}}/>
                   </TableCell>
                 </TableRow>
               ))}
@@ -204,7 +205,7 @@ const User: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
           component="div"
-          count={users?.length}
+          count={categories?.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -216,4 +217,4 @@ const User: React.FC = () => {
   );
 };
 
-export default User;
+export default Category;

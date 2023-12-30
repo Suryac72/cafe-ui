@@ -14,14 +14,15 @@ import {
   Backdrop,
   AlertColor,
 } from "@mui/material";
-import Toaster from "../../toaster/toaster";
-import Header from "../../header/header";
-import { useBill } from "../../../hooks/useBill";
+import Toaster from "../../../toaster/toaster";
+import Header from "../../../header/header";
+import { useBill } from "../../hooks/useBill";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
-import TableModal from "../../modal/table-modal";
-import { useBillDelete } from "../../../hooks/useBillDelete";
+import TableModal from "../../../modal/table-modal";
+import { useBillDelete } from "../../hooks/useBillDelete";
+import { useBillDownload } from "../../hooks/useBillDownload";
 
 export interface Bill {
   billId: number;
@@ -32,10 +33,21 @@ export interface Bill {
   paymentMethod: string;
   totalAmount: string;
   productDetails: string;
+  isGenerated: string;
 }
 
 const Bill: React.FC = () => {
-  const { bills, isLoading, error } = useBill();
+  const { bills, isLoading, error, refetch } = useBill();
+  const {
+    downloadBill,
+    isLoading: downloadLoading,
+    error: downloadError,
+  } = useBillDownload();
+  const {
+    deleteBill,
+    error: deleteError,
+    isLoading: deleteLoading,
+  } = useBillDelete();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -45,7 +57,6 @@ const Bill: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [open, setOpen] = useState(false);
   const [details, setDetails] = useState([]);
-  const { deleteBill, error:deleteError, isLoading:deleteLoading } = useBillDelete();
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -102,7 +113,7 @@ const Bill: React.FC = () => {
       setAutoHideDuration(4000);
       setAlertMessage(error.message);
     }
-  }, []);
+  }, [error]);
 
   const handleClose = () => {
     setIsAlert(false);
@@ -117,23 +128,44 @@ const Bill: React.FC = () => {
 
   const handleDelete = async (billId: string) => {
     try {
-      const deleteResponse = await deleteBill(billId);
-      setIsAlert(true);
+      // Delete the bill
+      await deleteBill(billId);
+
+      // Refetch bills to get the updated data
+      refetch();
+
       setIsAlert(true);
       setSeverity("success");
       setAutoHideDuration(4000);
-      setAlertMessage(deleteResponse?.message || "");
-    } catch (deleteError) {
+      setAlertMessage("Bill deleted successfully");
+    } catch (error) {
       setIsAlert(true);
       setSeverity("warning");
       setAutoHideDuration(4000);
       setAlertMessage(deleteError?.message || "");
     }
   };
+
+  const handleDownload = async (bill: Bill) => {
+    try {
+      // Download the bill
+      await downloadBill(bill);
+      setIsAlert(true);
+      setSeverity("success");
+      setAutoHideDuration(4000);
+      setAlertMessage("Bill downloaded successfully");
+    } catch (error) {
+      setIsAlert(true);
+      setSeverity("warning");
+      setAutoHideDuration(4000);
+      setAlertMessage(downloadError?.message || "");
+    }
+  };
+
   return (
     <>
-      {isLoading && (
-        <StyledBackdrop open={isLoading}>
+      {(isLoading || downloadLoading || deleteLoading) && (
+        <StyledBackdrop open={isLoading || downloadLoading || deleteLoading}>
           <CircularProgress sx={useStyles.circularProgress} color="inherit" />
         </StyledBackdrop>
       )}
@@ -181,8 +213,7 @@ const Bill: React.FC = () => {
             </TableHead>
             <TableBody>
               {(rowsPerPage > 0
-                ? // eslint-disable-next-line no-unsafe-optional-chaining
-                  bills?.slice(
+                ? bills?.slice(
                     page * rowsPerPage,
                     page * rowsPerPage + rowsPerPage
                   )
@@ -198,10 +229,16 @@ const Bill: React.FC = () => {
                   <TableCell>
                     <VisibilityIcon
                       style={{ marginRight: 8 }}
+                      sx={{cursor:'pointer'}}
                       onClick={() => handleModal(bill?.billUUID)}
                     />
-                    <DownloadIcon style={{ marginRight: 8 }} />
+                    <DownloadIcon
+                      style={{ marginRight: 8 }}
+                      sx={{cursor:'pointer'}}
+                      onClick={() => handleDownload(bill)}
+                    />
                     <DeleteIcon
+                      sx={{cursor:'pointer'}}
                       onClick={() => handleDelete(bill?.billId?.toString())}
                     />
                   </TableCell>

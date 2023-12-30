@@ -25,7 +25,7 @@ const getBills = async () => {
 };
 
 export function useBill() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error,refetch  } = useQuery({
     queryKey: "billData",
     queryFn: async () => await  getBills(),
   });
@@ -34,5 +34,6 @@ export function useBill() {
     bills: data,
     isLoading,
     error,
+    refetch
   };
 }

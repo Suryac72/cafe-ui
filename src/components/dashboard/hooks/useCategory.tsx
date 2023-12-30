@@ -25,7 +25,7 @@ const getCategories = async () => {
 };
 
 export function useCategory() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error,refetch } = useQuery({
     queryKey: "categoryData",
     queryFn: async () => await  getCategories(),
   });
@@ -34,5 +34,6 @@ export function useCategory() {
     categories: data,
     isLoading,
     error,
+    refetch
   };
 }

@@ -9,12 +9,12 @@ import {
   Typography,
   styled,
 } from "@mui/material";
-import { useDashboard } from "../../../hooks/useDashboard";
-import Toaster from "../../toaster/toaster";
+import { useDashboard } from "../../hooks/useDashboard";
+import Toaster from "../../../toaster/toaster";
 import { useState } from "react";
-import Category from "./category";
-import Product from "./product";
-import Bill from "./bill";
+import Category from "../category/category";
+import Product from "../product/product";
+import Bill from "../bill/bill";
 
 interface CardProps {
   title: string;

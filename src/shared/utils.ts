@@ -8,6 +8,7 @@ export interface UserData {
 export interface Setting{
   route: string;
   label:string;
+  state?: unknown;
 }
 export function logout(userData?: UserData) {
   if (userData) {

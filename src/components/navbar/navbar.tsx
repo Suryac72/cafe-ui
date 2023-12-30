@@ -18,18 +18,9 @@ import LoginModal from "../modal/login-modal";
 import Toaster from "../toaster/toaster";
 import { UserData, getJwtToken, logout } from "../../shared/utils";
 import { useNavigate } from "react-router-dom";
+import ProfileModal from "../modal/profile-modal";
 
 const pages = ["Login", "Signup", "Forgot Password?"];
-const settings = [
-  {
-    label:'Profile',
-    route: '/profile'
-  },
-  {
-    label: "Logout",
-    route:"/"
-  }
-]
 
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState<boolean>(false);
@@ -39,9 +30,9 @@ const Navbar: React.FC = () => {
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
-  const[userData,setUserData] = useState<UserData | undefined>();
-  const[expired,setExpired] = useState<boolean | undefined>(true);
-
+  const [userData, setUserData] = useState<UserData | undefined>();
+  const [expired, setExpired] = useState<boolean | undefined>(true);
+  const [profile, setProfile] = useState(false);
   const navigate = useNavigate();
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -55,6 +46,26 @@ const Navbar: React.FC = () => {
   const handleClose = () => {
     setIsAlert(false);
   };
+
+  const handleModalClose = () => {
+    setProfile(false);
+  };
+
+  const settings = [
+    {
+      label: "Dashboard",
+      route: "/dashboard",
+    },
+    {
+      label: "Profile",
+      route: "/profile",
+      states: { profile: profile, setProfile: handleModalClose },
+    },
+    {
+      label: "Logout",
+      route: "/",
+    },
+  ];
 
   const handleOptionClose = (label: string) => {
     setAnchorElNav(null);
@@ -96,6 +107,7 @@ const Navbar: React.FC = () => {
           alertMessage={alertMessage}
         />
       )}
+      <ProfileModal open={profile} onClose={handleModalClose} />
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <img
@@ -135,30 +147,32 @@ const Navbar: React.FC = () => {
                 <MenuIcon />
               </IconButton>
             )}
-           {expired && <Menu
-              id="menu-appbar"
-              anchorEl={anchorElNav}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "left",
-              }}
-              open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
-              sx={{
-                display: { xs: "block", md: "none" },
-              }}
-            >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={() => handleOptionClose(page)}>
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>}
+            {expired && (
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorElNav}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                open={Boolean(anchorElNav)}
+                onClose={handleCloseNavMenu}
+                sx={{
+                  display: { xs: "block", md: "none" },
+                }}
+              >
+                {pages.map((page) => (
+                  <MenuItem key={page} onClick={() => handleOptionClose(page)}>
+                    <Typography textAlign="center">{page}</Typography>
+                  </MenuItem>
+                ))}
+              </Menu>
+            )}
           </Box>
           <img src={Logo} width={"30px"} alt="..." className="md:hidden" />
           <Typography
@@ -181,18 +195,25 @@ const Navbar: React.FC = () => {
             Cafe Management System
           </Typography>
           {expired && <Box sx={{ flexGrow: 20 }} />}
-         {expired && <Box sx={{ flexGrow: 0, display: { xs: "none", md: "flex" } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={() => handleOptionClose(page)}
-                sx={{ my: 2, color: "white", display: "block" }}
-              >
-                {page}
-              </Button>
-            ))}
-          </Box>}
-          {!expired && <NavAvatar settings={settings} avatarText={userData?.sub?.toUpperCase().charAt(0)}/>}
+          {expired && (
+            <Box sx={{ flexGrow: 0, display: { xs: "none", md: "flex" } }}>
+              {pages.map((page) => (
+                <Button
+                  key={page}
+                  onClick={() => handleOptionClose(page)}
+                  sx={{ my: 2, color: "white", display: "block" }}
+                >
+                  {page}
+                </Button>
+              ))}
+            </Box>
+          )}
+          {!expired && (
+            <NavAvatar
+              settings={settings}
+              avatarText={userData?.sub?.toUpperCase().charAt(0)}
+            />
+          )}
           <LoginModal open={open} setOpen={setOpen} isLogin={isLogin} />
         </Toolbar>
       </Container>

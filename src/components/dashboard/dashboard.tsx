@@ -21,11 +21,12 @@ import { getJwtToken, logout } from "../../shared/utils";
 import { useEffect, useState } from "react";
 import { AlertColor } from "@mui/material";
 import Toaster from "../toaster/toaster";
-import Home from "./components/home";
-import Category from "./components/category";
-import Product from "./components/product";
-import Bill from "./components/bill";
-import User from "./components/user";
+import Home from "./components/home/home";
+import Category from "./components/category/category";
+import Product from "./components/product/product";
+import Bill from "./components/bill/bill";
+import User from "./components/user/user";
+import Order from "./components/order/order";
 
 const drawerWidth = 240;
 
@@ -81,7 +82,7 @@ export default function Dashboard(props: Props) {
         return <Product/>;
 
       case "Manage Order":
-        return <div>Manage Order Component</div>;
+        return <Order/>;
 
       case "View Bill":
         return <Bill/>;
