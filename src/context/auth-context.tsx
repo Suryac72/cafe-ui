@@ -33,7 +33,6 @@ export const AuthProvider: React.FC = ({ children } : any) => {
     setExpirationTime(null);
     localStorage.removeItem("token");
     localStorage.removeItem("tokenExpirationTime");
-    // Additional cleanup tasks (e.g., redirect to login page)
   };
 
   useEffect(() => {

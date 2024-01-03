@@ -22,13 +22,30 @@ import { useCategory } from "../dashboard/hooks/useCategory";
 import { DropDown } from "../../shared/models/order";
 import { Category } from "../dashboard/components/category/category";
 import { availability, status } from "../../shared/constants";
-import { VisuallyHiddenInput } from "@chakra-ui/react";
 import Toaster from "../toaster/toaster";
+import { VisuallyHiddenInput } from "@chakra-ui/react";
+import { useUpdateProduct } from "../dashboard/hooks/useUpdateProduct";
 
-const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
-  open,
-  onClose,
-}) => {
+export interface UpdateProduct {
+  productId?: string;
+  productName?: string;
+  productDescription?: string;
+  productPic?: string;
+  productAvailability?: string;
+  productPrice?: string;
+  productQuantity?: string;
+  status?: string;
+  categoryName?: string;
+  category?:string;
+  categoryId?: string;
+}
+
+const AddProductModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  productIdToUpdate?: string;
+  productToUpdateFields?: UpdateProduct;
+}> = ({ open, onClose, productIdToUpdate, productToUpdateFields }) => {
   const {
     handleSubmit,
     register,
@@ -37,6 +54,7 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
     formState: { errors },
     reset,
     setError,
+    clearErrors,
   } = useForm<AddProductFields>({
     defaultValues: {
       productAvailability: "",
@@ -50,8 +68,8 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
       categoryId: "",
     },
   });
+
   const [category, setCategory] = useState<DropDown[]>([]);
-  const [image, setImage] = useState("");
   const [url, setUrl] = useState("");
   const { handleUpload, isLoading, error, data: imageData } = useImageUpload();
   const {
@@ -64,76 +82,123 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
   const { categories } = useCategory();
+  const {
+    error: updateError,
+    isLoading: updateLoading,
+    updateProduct,
+  } = useUpdateProduct();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
-    setImage(file);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
     const data = new FormData();
-    data.append("file", image);
+    data.append("file", file);
     data.append("upload_preset", "cafe-management");
     data.append("cloud_name", "talk-addictive");
-    console.log(data);
     try {
-      if (!image) {
+      if (!file) {
         setError("productPic", {
           type: "custom",
           message: "Product Pic is required",
         });
       }
-      console.log(data);
-      const response = handleUpload(data);
-      if (error) {
-        setIsAlert(true);
-        setSeverity("error");
-        setAutoHideDuration(4000);
-        setAlertMessage(error?.message);
-      }
+      await handleUpload(data);
       setUrl(imageData?.secure_url);
-      setIsAlert(true);
-      setSeverity("success");
-      setAutoHideDuration(4000);
-      setAlertMessage("Image uploaded successfully");
     } catch (e) {
       setIsAlert(true);
       setSeverity("error");
       setAutoHideDuration(4000);
       setAlertMessage(e?.message);
     }
+    setValue("productPic", "");
   };
 
-  const onSubmit = (formData: AddProductFields) => {
+  useEffect(() => {
+    // Reset the form when the modal opens or categoryIdToUpdate changes
+    if (open || productIdToUpdate) {
+      reset();
+    }
+    if (productToUpdateFields) {
+      setValue("productName", productToUpdateFields?.productName || "");
+      setValue(
+        "productDescription",
+        productToUpdateFields?.productDescription || ""
+      );
+      setValue("productPic", productToUpdateFields?.productPic || "");
+      setValue("productPrice", productToUpdateFields?.productPrice || "");
+      setValue("productQuantity", productToUpdateFields?.productQuantity || "");
+      setValue("status", productToUpdateFields?.status || "");
+      setValue(
+        "productAvailability",
+        productToUpdateFields?.productAvailability || ""
+      );
+      setValue(
+        "categoryId",
+        productToUpdateFields?.category?.categoryId.toString() || ""
+      );
+    }
+  }, [open, productIdToUpdate, reset, setValue, productToUpdateFields]);
+
+  useEffect(() => {
+    if (error || productError) {
+      setIsAlert(true);
+      setSeverity("error");
+      setAutoHideDuration(4000);
+      setAlertMessage(error?.message ? error?.message : productError?.message);
+    }
+  }, [error, productError]);
+
+  const onSubmit = async (formData: AddProductFields) => {
     try {
       const category = categories?.find(
         (category: Category) =>
           formData.categoryId === category.categoryId.toString()
       );
-      setValue("productPic", url);
-      const productPayload: AddProductFields = {
+
+      let payload: UpdateProduct | AddProductFields = {
         ...formData,
         category: category,
-        productPic: url,
       };
-      const response = addProduct(productPayload);
-      console.log(response);
-      console.log(productError);
-      if (!response) {
-        setIsAlert(true);
-        setSeverity("error");
-        setAutoHideDuration(4000);
-        setAlertMessage(productError?.message);
+
+      if (imageData?.secure_url) {
+        payload = {
+          ...payload,
+          productPic: imageData["secure_url"],
+        };
       }
+
+      if (productIdToUpdate) {
+        const updatePayload: UpdateProduct = {
+          productName: payload.productName,
+          productDescription: payload.productDescription,
+          productPic: payload.productPic,
+          productPrice: payload.productPrice,
+          productQuantity: payload.productQuantity,
+          category: JSON.stringify(category),
+          productId: productIdToUpdate,
+          status: payload?.status
+        };
+        await updateProduct(updatePayload);
+      } else {
+        const productPayload: AddProductFields = payload as AddProductFields;
+        await addProduct(productPayload);
+      }
+
       onClose();
       setIsAlert(true);
       setSeverity("success");
       setAutoHideDuration(4000);
-      setAlertMessage("Product updated successfully");
+      setAlertMessage(
+        productIdToUpdate
+          ? "Product updated successfully"
+          : "Product added successfully"
+      );
     } catch (error) {
       setIsAlert(true);
       setSeverity("error");
       setAutoHideDuration(4000);
-      setAlertMessage(productError?.message);
+      setAlertMessage(productError?.message || updateError?.message);
     }
-  };
+  }
 
   useEffect(() => {
     const categoryResponse = categories?.map((category: Category) => {
@@ -162,7 +227,9 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Add Product</DialogTitle>
+        <DialogTitle>
+          {productIdToUpdate ? "Update" : "Add"} Product
+        </DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
             <Grid container spacing={2}>
@@ -203,7 +270,10 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
                   error={!!errors.categoryId}
                   helperText={errors?.categoryId?.message}
                   value={watch("categoryId") || ""}
-                  onChange={(e) => setValue("categoryId", e.target.value)}
+                  onChange={(e) => {
+                    setValue("categoryId", e.target.value);
+                    clearErrors("categoryId");
+                  }}
                 >
                   {category?.map((option: DropDown) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -248,9 +318,10 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
                   error={!!errors.productAvailability}
                   helperText={errors?.productAvailability?.message}
                   value={watch("productAvailability") || ""}
-                  onChange={(e) =>
-                    setValue("productAvailability", e.target.value)
-                  }
+                  onChange={(e) => {
+                    clearErrors("productAvailability");
+                    setValue("productAvailability", e.target.value);
+                  }}
                 >
                   {availability?.map((option: DropDown) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -271,7 +342,10 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
                   error={!!errors.status}
                   helperText={errors?.status?.message}
                   value={watch("status") || ""}
-                  onChange={(e) => setValue("status", e.target.value)}
+                  onChange={(e) => {
+                    setValue("status", e.target.value);
+                    clearErrors("status");
+                  }}
                 >
                   {status?.map((option: DropDown) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -293,7 +367,9 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
                   )}
                   <VisuallyHiddenInput
                     type="file"
-                    onChange={(e) => handleFileChange(e)}
+                    onChange={(e) => {
+                      handleFileChange(e);
+                    }}
                   />
                 </Button>
               </Grid>
@@ -313,10 +389,16 @@ const AddProductModal: React.FC<{ open: boolean; onClose: () => void }> = ({
             <Button
               type="submit"
               color="primary"
-              disabled={productLoading}
+              disabled={productLoading || updateLoading}
               variant="contained"
             >
-              {productLoading ? "Adding..." : "Add Product"}
+              {productLoading || updateLoading
+                ? productIdToUpdate
+                  ? "Updating..."
+                  : "Adding..."
+                : productIdToUpdate
+                ? "Update Product"
+                : "Add Product"}
             </Button>
           </DialogActions>
         </form>

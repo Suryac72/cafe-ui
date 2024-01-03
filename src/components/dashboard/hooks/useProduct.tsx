@@ -25,7 +25,7 @@ const getProducts = async () => {
 };
 
 export function useProduct() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error,refetch } = useQuery({
     queryKey: "productData",
     queryFn: async () => await  getProducts(),
   });
@@ -34,5 +34,6 @@ export function useProduct() {
     products: data,
     isLoading,
     error,
+    refetch,
   };
 }

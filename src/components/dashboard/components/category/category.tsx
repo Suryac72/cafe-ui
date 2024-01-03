@@ -17,9 +17,11 @@ import {
 import { useCategory } from "../../hooks/useCategory";
 import Toaster from "../../../toaster/toaster";
 import Header from "../../../header/header";
-import AddCategoryModal, { UpdateCategory } from "../../../modal/add-category-modal";
+import AddCategoryModal, {
+  UpdateCategory,
+} from "../../../modal/add-category-modal";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from '@mui/icons-material/Edit';
+import EditIcon from "@mui/icons-material/Edit";
 import { useDeleteCategory } from "../../hooks/useDeleteCategory";
 
 export interface Category {
@@ -29,7 +31,7 @@ export interface Category {
 }
 
 const Category: React.FC = () => {
-  const { categories, isLoading, error,refetch } = useCategory();
+  const { categories, isLoading, error, refetch } = useCategory();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -38,9 +40,13 @@ const Category: React.FC = () => {
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
   const [open, setOpen] = useState(false);
-  const {deleteCategory,isLoading:deleteLoading,error:deleteError} = useDeleteCategory();
-  const [categoryId,setCategoryId] = useState("");
-  const [categoryToUpdate,setCategoryToUpdate] = useState<UpdateCategory>({});
+  const {
+    deleteCategory,
+    isLoading: deleteLoading,
+    error: deleteError,
+  } = useDeleteCategory();
+  const [categoryId, setCategoryId] = useState("");
+  const [categoryToUpdate, setCategoryToUpdate] = useState<UpdateCategory>({});
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#3559E0",
@@ -105,7 +111,7 @@ const Category: React.FC = () => {
   const handleModalClose = () => {
     setOpen(false);
   };
- 
+
   const handleDelete = async (categoryId: string) => {
     try {
       // Delete the bill
@@ -124,19 +130,10 @@ const Category: React.FC = () => {
     }
   };
 
-  // const handleEdit = (categoryId:string,category:Category) =>{
-  //   setOpen(!open);
-  //   setCategoryId(categoryId);
-  //   const obj : Category = {
-  //     categoryTitle: category.categoryTitle || "",
-  //     categoryDescription: ca
-  //   }
-  // }
-
   return (
     <>
       {(isLoading || deleteLoading) && (
-        <StyledBackdrop open={(isLoading || deleteLoading)}>
+        <StyledBackdrop open={isLoading || deleteLoading}>
           <CircularProgress sx={useStyles.circularProgress} color="inherit" />
         </StyledBackdrop>
       )}
@@ -152,7 +149,11 @@ const Category: React.FC = () => {
       <Header
         title="Manage Categories"
         buttonText="Add Category"
-        onButtonClick={() => {setOpen(!open);setCategoryId("");setCategoryToUpdate({})}}
+        onButtonClick={() => {
+          setOpen(!open);
+          setCategoryId("");
+          setCategoryToUpdate({});
+        }}
       />
       <AddCategoryModal
         open={open}
@@ -192,10 +193,19 @@ const Category: React.FC = () => {
                   <TableCell>
                     <DeleteIcon
                       style={{ marginRight: 8 }}
-                      sx={{cursor:'pointer'}}
-                      onClick={() => handleDelete(category?.categoryId?.toString())}
+                      sx={{ cursor: "pointer" }}
+                      onClick={() =>
+                        handleDelete(category?.categoryId?.toString())
+                      }
                     />
-                    <EditIcon   sx={{cursor:'pointer'}} onClick={() =>{ setOpen(!open);setCategoryToUpdate(category);setCategoryId(category?.categoryId?.toString())}}/>
+                    <EditIcon
+                      sx={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setOpen(!open);
+                        setCategoryToUpdate(category);
+                        setCategoryId(category?.categoryId?.toString());
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

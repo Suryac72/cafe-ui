@@ -29,6 +29,7 @@ interface LoginModalProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isLogin: boolean;
+  modalText?: string;
 }
 
 interface AuthFormFields {
@@ -41,7 +42,12 @@ interface AuthFormFields {
 
 const defaultTheme = createTheme();
 
-const LoginModal: React.FC<LoginModalProps> = ({ open, setOpen, isLogin }) => {
+const LoginModal: React.FC<LoginModalProps> = ({
+  open,
+  setOpen,
+  isLogin,
+  modalText,
+}) => {
   const { registerUser, isLoading, error } = useSignUp();
   const { loginUser, isLoading: isLoginLoading } = useLogin();
   const [isAlert, setIsAlert] = useState(false);
@@ -69,8 +75,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, setOpen, isLogin }) => {
   const handleClose = () => {
     setIsAlert(false);
   };
-
-  
 
   useEffect(() => {
     // Reset the form values when isLogin changes
@@ -170,7 +174,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, setOpen, isLogin }) => {
                     <LockOutlinedIcon />
                   </Avatar>
                   <Typography component="h1" variant="h5">
-                    {isLogin ? "Sign in" : "Sign up"}
+                    {modalText ? modalText : isLogin ? "Sign in" : "Sign up"}
                   </Typography>
                   <Box sx={{ mt: 1 }}>
                     {!isLogin && (
@@ -253,18 +257,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, setOpen, isLogin }) => {
                         />
                       </>
                     )}
-                    {isLogin && (
-                      <FormControlLabel
-                        control={<Checkbox value="remember" color="primary" />}
-                        label="Remember me"
-                      />
-                    )}
-
                     <Button
                       type="submit"
                       fullWidth
                       variant="contained"
-                      sx={{ mb: 1 }}
+                      sx={{ mb: 2,mt:2 }}
                     >
                       {isLoading || isLoginLoading ? (
                         <CircularProgress color="inherit" />
@@ -274,20 +271,22 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, setOpen, isLogin }) => {
                         "Sign Up"
                       )}
                     </Button>
-                    <Grid container>
-                      <Grid item xs>
-                        <Link href="#" variant="body2">
-                          Forgot password?
-                        </Link>
+                    {!modalText && (
+                      <Grid container>
+                        <Grid item xs>
+                          <Link href="#" variant="body2">
+                            Forgot password?
+                          </Link>
+                        </Grid>
+                        <Grid item>
+                          <Link href="#" variant="body2">
+                            {isLogin
+                              ? "Don't have an account? Sign Up"
+                              : "Already have an account? Sign In"}
+                          </Link>
+                        </Grid>
                       </Grid>
-                      <Grid item>
-                        <Link href="#" variant="body2">
-                          {isLogin
-                            ? "Don't have an account? Sign Up"
-                            : "Already have an account? Sign In"}
-                        </Link>
-                      </Grid>
-                    </Grid>
+                    )}
                   </Box>
                 </Box>
               </Container>

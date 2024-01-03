@@ -18,9 +18,7 @@ import LoginModal from "../modal/login-modal";
 import Toaster from "../toaster/toaster";
 import { UserData, getJwtToken, logout } from "../../shared/utils";
 import { useNavigate } from "react-router-dom";
-import ProfileModal from "../modal/profile-modal";
-
-const pages = ["Login", "Signup", "Forgot Password?"];
+import { pages } from "../../shared/constants";
 
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState<boolean>(false);
@@ -38,7 +36,7 @@ const Navbar: React.FC = () => {
     setAnchorElNav(event.currentTarget);
   };
 
-  const handleCloseNavMenu = () => {
+  const handleCloseNavMenu = (): void => {
     setAnchorElNav(null);
     setOpen(false);
   };
@@ -96,6 +94,14 @@ const Navbar: React.FC = () => {
       navigate("/");
     }
   }, []);
+
+  useEffect(() => {
+    if (isAlert) {
+      setTimeout(() => {
+        setIsAlert(false);
+      }, autoHideDuration);
+    }
+  }, [isAlert, autoHideDuration, setIsAlert]);
   return (
     <AppBar position="static">
       {isAlert && alertMessage && (
@@ -107,7 +113,6 @@ const Navbar: React.FC = () => {
           alertMessage={alertMessage}
         />
       )}
-      <ProfileModal open={profile} onClose={handleModalClose} />
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <img

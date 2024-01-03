@@ -10,7 +10,7 @@ import {
   AlertColor,
   CircularProgress,
 } from "@mui/material";
-import { useForm, useFormState } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   AddCategoryFields,
   useAddCategory,
@@ -87,7 +87,7 @@ const AddCategoryModal: React.FC<{
     }
   }, [addError, updateError]);
 
-  const onSubmit = async (formData: AddCategoryFields) => {
+  const onSubmit = async (formData: UpdateCategory | AddCategoryFields) => {
     try {
       if (categoryIdToUpdate) {
         const payload: UpdateCategory = {
@@ -97,7 +97,7 @@ const AddCategoryModal: React.FC<{
         // If categoryIdToUpdate is present, it means we're in update mode
         await updateCategory({ ...payload, categoryId: categoryIdToUpdate });
       } else {
-        await addCategory(formData);
+        await addCategory(formData as AddCategoryFields);
       }
       onClose();
       setIsAlert(true);

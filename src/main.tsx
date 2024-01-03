@@ -5,6 +5,7 @@ import React from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Home from "./components/home/home";
 import { QueryClient, QueryClientProvider } from "react-query";
+import ProfileModal from "./components/modal/profile-modal";
 
 const router = createBrowserRouter([
   {
@@ -17,7 +18,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/profile",
-    element: <></>,
+    element: <ProfileModal/>,
   },
 ]);
 const queryClient = new QueryClient();

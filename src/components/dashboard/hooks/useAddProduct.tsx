@@ -18,23 +18,23 @@ function buildApiEndpoint() {
 }
 
 const addProduct = async (formData: AddProductFields) => {
-  const url = buildApiEndpoint();
-  const token = localStorage.getItem("token");
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(formData),
-  });
+    const url = buildApiEndpoint();
+    const token = localStorage.getItem("token");
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Something went wrong");
-  }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Something went wrong");
+    }
 
-  return response.json();
+    return response.json();
 };
 
 export function useAddProduct() {

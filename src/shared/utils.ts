@@ -5,9 +5,13 @@ export interface UserData {
   exp: number;
 }
 
-export interface Setting{
+export interface Error {
+  message: string;
+}
+
+export interface Setting {
   route: string;
-  label:string;
+  label: string;
   state?: unknown;
 }
 export function logout(userData?: UserData) {
@@ -26,7 +30,7 @@ const decodeToken = (token: string): UserData => {
 
 const isTokenExpired = (token: UserData | null): boolean => {
   const currentTime = Math.floor(Date.now() / 1000);
-  if(token){
+  if (token) {
     return token.exp < currentTime;
   }
   return true;
@@ -34,12 +38,19 @@ const isTokenExpired = (token: UserData | null): boolean => {
 
 export function getJwtToken() {
   const token = localStorage.getItem("token");
-  let userData, isExpired = true;
+  let userData,
+    isExpired = true;
   if (token) {
     // Decode the JWT to extract user information
     userData = decodeToken(token);
     // Set the user data in the state
     isExpired = isTokenExpired(userData);
   }
-  return { userData, expired: isExpired};
+  return { userData, expired: isExpired };
+}
+
+export function fetchImageName(url: string) {
+  const list = url.split("/");
+  const imageNameWithExtension = list[list.length - 1];
+  return imageNameWithExtension.split(".")[0];
 }

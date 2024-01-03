@@ -7,6 +7,7 @@ interface HeaderProps {
   onButtonClick?: () => void;
   icon?: JSX.Element;
   buttonType?: "button" | "submit" | "reset" | undefined;
+  isDisabled:boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -15,6 +16,7 @@ const Header: React.FC<HeaderProps> = ({
   onButtonClick,
   icon,
   buttonType,
+  isDisabled,
 }) => {
   return (
     <Card sx={{ marginBottom: 4 }}>
@@ -32,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({
             onClick={onButtonClick}
             startIcon={icon}
             type={buttonType}
+            disabled={isDisabled}
           >
             {buttonText}
           </Button>

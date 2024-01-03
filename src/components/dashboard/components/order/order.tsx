@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   AlertColor,
   Backdrop,
@@ -5,23 +6,23 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   Grid,
   MenuItem,
   Paper,
   Table,
-  TableBody,
-  TableCell,
   TableContainer,
+  TableCell,
   TableHead,
-  TablePagination,
   TableRow,
   TextField,
   Typography,
   styled,
   tableCellClasses,
+  TablePagination,
+  TableBody,
+  CircularProgress,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useForm, SubmitHandler, UseFormRegister } from "react-hook-form";
 import Header from "../../../header/header";
 import PrintIcon from "@mui/icons-material/Print";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
@@ -30,26 +31,31 @@ import { useProduct } from "../../hooks/useProduct";
 import { useCategory } from "../../hooks/useCategory";
 import { ProductProps } from "../product/product";
 import { Category } from "../category/category";
-import { DropDown } from "../../../../shared/models/order";
-import { useForm } from "react-hook-form";
+import { DropDown, TableProduct } from "../../../../shared/models/order";
 import { Order } from "../../../../shared/models/order";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Toaster from "../../../toaster/toaster";
+import { useBillDownload } from "../../hooks/useBillDownload";
+import Bill from "../bill/bill";
+
 const Order = () => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [isAlert, setIsAlert] = useState(false);
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
   const [product, setProduct] = useState<DropDown[]>([]);
   const [category, setCategory] = useState<DropDown[]>([]);
-  const [open, setOpen] = useState(false);
-
+  const [amount, setAmount] = useState("");
+  const [addedProducts, setAddedProducts] = useState<TableProduct[]>([]);
   const {
-    handleSubmit,
-    register,
-    watch,
-    setValue,
-    setError,
-    reset,
-    formState: { errors },
+    handleSubmit: handleSubmitCustomerDetails,
+    register: registerCustomerDetails,
+    watch: watchCustomerDetails,
+    setValue: setValueCustomerDetails,
+    formState: { errors: errorsCustomerDetails },
+    reset: resetCustomerDetails,
   } = useForm<Order>({
     defaultValues: {
       customerName: "",
@@ -62,16 +68,31 @@ const Order = () => {
   });
 
   const {
-    products,
-    isLoading: isProductLoading,
-    error: productError,
-  } = useProduct();
-  const {
-    categories,
-    isLoading: isCategoryLoading,
-    error: categoryError,
-  } = useCategory();
+    handleSubmit: handleSubmitProductDetails,
+    register: registerProductDetails,
+    watch: watchProductDetails,
+    setValue: setValueProductDetails,
+    reset: resetProductDetails,
+    formState: { errors: errorsProductDetails },
+    getValues,
+  } = useForm<Order>({
+    defaultValues: {
+      categoryName: "",
+      productName: "",
+      productPrice: "",
+      productQuantity: "",
+      totalAmount: "",
+    },
+  });
 
+  const { products, isLoading: isProductLoading } = useProduct();
+  const { categories, isLoading: isCategoryLoading } = useCategory();
+
+  const {
+    error: billError,
+    downloadBill,
+    isLoading: billLoading,
+  } = useBillDownload();
   const StyledBackdrop = styled(Backdrop)(() => ({
     backdropFilter: "blur(3px)",
     backgroundColor: "rgba(0, 0, 30, 0.4)",
@@ -84,6 +105,10 @@ const Order = () => {
       left: "50%",
       transform: "translate(-50%, -50%)",
     },
+  };
+
+  const handleClose = () => {
+    setIsAlert(false);
   };
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -106,198 +131,374 @@ const Order = () => {
     },
   }));
 
-  const onSubmit = async (formData: Order) => {
-    console.log(formData);
+  const handleAddProduct = () => {
+    const productToBeAdd: TableProduct = {
+      id: addedProducts.length + 1,
+      name: products.find(
+        (item: ProductProps) =>
+          item.productId.toString() === getValues("productName")
+      ).productName,
+      category: categories.find(
+        (item: Category) =>
+          item.categoryId.toString() === getValues("categoryName")
+      ).categoryTitle,
+      quantity: getValues("productQuantity"),
+      price: Number(getValues("productPrice")),
+      total: Number(getValues("totalAmount")),
+    };
+    setAddedProducts([...addedProducts, productToBeAdd]);
+    resetProductDetails();
   };
+
+  const onSubmitCustomerDetails: SubmitHandler<Order> = async (formData) => {
+    try {
+      // Download the bill
+      console.log(addedProducts);
+      const payload = {
+        ...formData,
+        fileName: `BILL-${new Date().toISOString()}`,
+        isGenerated: "true",
+        totalAmount: amount,
+      } as Bill;
+      payload["productDetails"] = JSON.stringify(addedProducts);
+
+      await downloadBill(payload);
+      setIsAlert(true);
+      setSeverity("success");
+      setAutoHideDuration(4000);
+      setAlertMessage("Bill downloaded successfully");
+    } catch (error) {
+      setIsAlert(true);
+      setSeverity("warning");
+      setAutoHideDuration(4000);
+      setAlertMessage(billError?.message || "");
+    }
+    resetProductDetails();
+    resetCustomerDetails();
+    setAddedProducts([]);
+    setAmount("0");
+  };
+
+  const handleProductValues = (productFormValue?: string) => {
+    if (productFormValue) {
+      const foundProduct: ProductProps = products.find(
+        (item: ProductProps) => item.productId.toString() === productFormValue
+      );
+      console.log(foundProduct);
+      setValueProductDetails("productPrice", foundProduct.productPrice);
+    }
+  };
+
+  const handleCascading = (categoryFormValue?: string) => {
+    if (categoryFormValue) {
+      const foundCategory = categories.find(
+        (item: Category) => item.categoryId.toString() === categoryFormValue
+      );
+      const filteredProduct = products.filter(
+        (items: ProductProps) =>
+          items.category.categoryId === foundCategory?.categoryId
+      );
+      const result = filteredProduct?.map((product: ProductProps) => {
+        return {
+          label: product.productName,
+          value: product.productId,
+          id: product.category?.categoryId,
+        };
+      });
+      setProduct(result);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    const updatedProducts = addedProducts.filter(
+      (product: TableProduct) => product.id.toString() !== id
+    );
+    setAddedProducts(updatedProducts);
+  };
+
   useEffect(() => {
     const productResponse = products?.map((product: ProductProps) => {
-      return { label: product.productName, value: product.productName };
+      return {
+        label: product.productName,
+        value: product.productId,
+        id: product.category?.categoryId,
+      };
     });
     const categoryResponse = categories?.map((category: Category) => {
-      return { label: category.categoryTitle, value: category.categoryTitle };
+      return {
+        label: category.categoryTitle,
+        value: category.categoryId,
+      };
     });
     setProduct(productResponse);
     setCategory(categoryResponse);
   }, [products, categories]);
 
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  useEffect(() => {
+    const quantity = Number(watchProductDetails("productQuantity"));
+    const price = Number(watchProductDetails("productPrice"));
+
+    if (!isNaN(quantity) && !isNaN(price)) {
+      const totalAmount = quantity * price;
+      setValueProductDetails("totalAmount", totalAmount.toString());
+      setAmount((Number(amount) + Number(totalAmount)).toString());
+    }
+  }, [
+    watchProductDetails("productQuantity"),
+    watchProductDetails("productPrice"),
+  ]);
+
+  useEffect(() => {
+    if (isAlert) {
+      setTimeout(() => {
+        setIsAlert(false);
+      }, autoHideDuration);
+    }
+  }, [isAlert, autoHideDuration, setIsAlert]);
+
   return (
     <>
-      <Header
-        title="Manage Order"
-        buttonText="Submit & get bill"
-        icon={<PrintIcon />}
-        buttonType="submit"
-      />
+      {(isProductLoading || isCategoryLoading) && (
+        <StyledBackdrop open={isProductLoading || isCategoryLoading}>
+          <CircularProgress sx={useStyles.circularProgress} color="inherit" />
+        </StyledBackdrop>
+      )}
+      {isAlert && alertMessage && (
+        <Toaster
+          isAlert={isAlert}
+          severity={severity}
+          autoHideDuration={autoHideDuration}
+          handleClose={handleClose}
+          alertMessage={alertMessage}
+        />
+      )}
       <Card
-        sx={{ marginBottom: 4 }}
         component="form"
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmitCustomerDetails(onSubmitCustomerDetails)}
       >
-        <CardContent>
-          <Typography variant="h6" sx={{ marginBottom: 1 }}>
-            Customer Details
-          </Typography>
-          <Box>
-            <Grid container spacing={2}>
-              <Grid item xs={3}>
-                <TextField
-                  required
-                  id="standard-required"
-                  label="Name"
-                  variant="standard"
-                  fullWidth
-                  {...register("customerName", {
-                    required: "Customer name is required.",
-                  })}
-                  error={!!errors.customerName}
-                  helperText={errors?.customerName?.message}
-                />
+        <Header
+          title="Manage Order"
+          buttonText="Submit & get bill"
+          icon={<PrintIcon />}
+          buttonType="submit"
+          isDisabled={addedProducts.length === 0 ? true : false}
+        />
+        <Card sx={{ marginBottom: 4 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ marginBottom: 1 }}>
+              Customer Details
+            </Typography>
+            <Box>
+              <Grid container spacing={2}>
+                <Grid item xs={3}>
+                  <TextField
+                    id="standard-required"
+                    label="Name"
+                    variant="standard"
+                    fullWidth
+                    {...registerCustomerDetails("customerName", {
+                      required: "Customer name is required.",
+                    })}
+                    error={!!errorsCustomerDetails.customerName}
+                    helperText={errorsCustomerDetails?.customerName?.message}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    id="standard-required"
+                    label="Email"
+                    variant="standard"
+                    fullWidth
+                    {...registerCustomerDetails("customerEmail", {
+                      required: "Customer email is required.",
+                    })}
+                    error={!!errorsCustomerDetails.customerEmail}
+                    helperText={errorsCustomerDetails?.customerEmail?.message}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    id="standard-required"
+                    label="Contact Number"
+                    variant="standard"
+                    fullWidth
+                    {...registerCustomerDetails("contactNumber", {
+                      required: "Contact number is required.",
+                    })}
+                    error={!!errorsCustomerDetails.contactNumber}
+                    helperText={errorsCustomerDetails?.contactNumber?.message}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    id="standard-select-currency"
+                    select
+                    label="Payment Method"
+                    variant="standard"
+                    fullWidth
+                    {...registerCustomerDetails("paymentMethod", {
+                      required: "Payment method is required.",
+                    })}
+                    error={!!errorsCustomerDetails.paymentMethod}
+                    helperText={errorsCustomerDetails?.paymentMethod?.message}
+                    value={watchCustomerDetails("paymentMethod") || ""}
+                    onChange={(e) =>
+                      setValueCustomerDetails("paymentMethod", e.target.value)
+                    }
+                  >
+                    {paymentMethods.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
               </Grid>
-              <Grid item xs={3}>
-                <TextField
-                  required
-                  id="standard-required"
-                  label="Email"
-                  variant="standard"
-                  fullWidth
-                  {...register("customerEmail", {
-                    required: "Customer email is required.",
-                  })}
-                  error={!!errors.customerEmail}
-                  helperText={errors?.customerEmail?.message}
-                />
-              </Grid>
-              <Grid item xs={3}>
-                <TextField
-                  required
-                  id="standard-required"
-                  label="Contact Number"
-                  variant="standard"
-                  fullWidth
-                  {...register("contactNumber", {
-                    required: "Contact number is required.",
-                  })}
-                  error={!!errors.contactNumber}
-                  helperText={errors?.contactNumber?.message}
-                />
-              </Grid>
+            </Box>
+          </CardContent>
+        </Card>
+      </Card>
+
+      <Card
+        component="form"
+        onSubmit={handleSubmitProductDetails(handleAddProduct)}
+      >
+        <Card sx={{ marginBottom: 4 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ marginBottom: 1 }}>
+              Select Products
+            </Typography>
+            <Grid container spacing={2} alignItems="center">
               <Grid item xs={3}>
                 <TextField
                   id="standard-select-currency"
                   select
-                  label="Payment Method"
+                  label="Category"
                   variant="standard"
                   fullWidth
-                  {...register("paymentMethod", {
-                    required: "Payment method is required.",
+                  {...registerProductDetails("categoryName", {
+                    required: "Category is required.",
                   })}
-                  error={!!errors.paymentMethod}
-                  helperText={errors?.paymentMethod?.message}
-                  value={watch("paymentMethod") || ""}
-                  onChange={(e) => setValue("paymentMethod", e.target.value)}
+                  error={!!errorsProductDetails.categoryName}
+                  helperText={errorsProductDetails?.categoryName?.message}
+                  value={watchProductDetails("categoryName") || ""}
+                  onChange={(e) => {
+                    {
+                      setValueProductDetails("categoryName", e.target.value);
+                      handleCascading(watchProductDetails("categoryName"));
+                    }
+                  }}
                 >
-                  {paymentMethods.map((option) => (
+                  {category?.map((option: DropDown) => (
                     <MenuItem key={option.value} value={option.value}>
                       {option.label}
                     </MenuItem>
                   ))}
                 </TextField>
               </Grid>
-            </Grid>
-          </Box>
-        </CardContent>
-      </Card>
-      <Card sx={{ marginBottom: 4 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ marginBottom: 1 }}>
-            Select Products
-          </Typography>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={3}>
-              <TextField
-                id="standard-select-currency"
-                select
-                label="Category"
-                variant="standard"
-                fullWidth
-                {...register("categoryName", {
-                    required: "Category is required.",
-                  })}
-                  error={!!errors.categoryName}
-                  helperText={errors?.categoryName?.message}
-                  value={watch("categoryName") || ""}
-                  onChange={(e) => setValue("categoryName", e.target.value)}
-              >
-                {category?.map((option: DropDown) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                id="standard-select-currency"
-                select
-                label="Product"
-                variant="standard"
-                fullWidth
-                {...register("productName", {
+              <Grid item xs={3}>
+                <TextField
+                  id="standard-select-currency"
+                  select
+                  label="Product"
+                  variant="standard"
+                  fullWidth
+                  {...registerProductDetails("productName", {
                     required: "Product is required.",
                   })}
-                  error={!!errors.productName}
-                  helperText={errors?.productName?.message}
-                  value={watch("productName") || ""}
-                  onChange={(e) => setValue("productName", e.target.value)}
-              >
-                {product?.map((option: DropDown) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+                  error={!!errorsProductDetails.productName}
+                  helperText={errorsProductDetails?.productName?.message}
+                  value={watchProductDetails("productName") || ""}
+                  onChange={(e) => {
+                    setValueProductDetails("productName", e.target.value);
+                    handleProductValues(e.target.value);
+                  }}
+                >
+                  {product?.map((option: DropDown) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={2}>
+                <TextField
+                  style={{ color: "black" }}
+                  id="standard-required"
+                  label="Price"
+                  variant="standard"
+                  fullWidth
+                  disabled={true}
+                  value={getValues("productPrice")}
+                  {...registerProductDetails("productPrice", {
+                    required: "Product price is required.",
+                  })}
+                  error={!!errorsProductDetails.productPrice}
+                  helperText={errorsProductDetails?.productPrice?.message}
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <TextField
+                  id="standard-required"
+                  label="Quantity"
+                  variant="standard"
+                  fullWidth
+                  {...registerProductDetails("productQuantity", {
+                    required: "Quantity is required.",
+                  })}
+                  error={!!errorsProductDetails.productQuantity}
+                  helperText={errorsProductDetails?.productQuantity?.message}
+                />
+              </Grid>
+              <Grid item xs={2}>
+                <TextField
+                  id="standard-required"
+                  label="Total"
+                  variant="standard"
+                  disabled={true}
+                  value={getValues("totalAmount")}
+                  fullWidth
+                  {...registerProductDetails("totalAmount", {
+                    required: "Total is required.",
+                  })}
+                  error={!!errorsProductDetails.totalAmount}
+                  helperText={errorsProductDetails?.totalAmount?.message}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={2}>
-              <TextField
-                required
-                id="standard-required"
-                label="Price"
-                variant="standard"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={2}>
-              <TextField
-                required
-                id="standard-required"
-                label="Quantity"
-                variant="standard"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={2}>
-              <TextField
-                required
-                id="standard-required"
-                label="Total"
-                variant="standard"
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-          <Grid container justifyContent="space-between" sx={{ marginTop: 4 }}>
-            <Button variant="contained" size="large">
-              Add
-            </Button>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<CurrencyRupeeIcon />}
+            <Grid
+              container
+              justifyContent="space-between"
+              sx={{ marginTop: 4 }}
             >
-              Total Amount
-            </Button>
-          </Grid>
-        </CardContent>
+              <Button variant="contained" size="large" type="submit">
+                Add
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                type="button"
+                startIcon={<CurrencyRupeeIcon />}
+              >
+                {`Total Amount : ${amount}`}
+              </Button>
+            </Grid>
+          </CardContent>
+        </Card>
       </Card>
       <Card sx={{ marginBottom: 4 }}>
         <Paper>
@@ -305,82 +506,69 @@ const Order = () => {
             <Table>
               <TableHead>
                 <StyledTableRow>
+                  <StyledTableCell sx={{ fontSize: 18 }}>ID</StyledTableCell>
                   <StyledTableCell sx={{ fontSize: 18 }}>Name</StyledTableCell>
                   <StyledTableCell sx={{ fontSize: 18 }}>
                     Category
                   </StyledTableCell>
                   <StyledTableCell sx={{ fontSize: 18 }}>
-                    Product
-                  </StyledTableCell>
-                  <StyledTableCell sx={{ fontSize: 18 }}>Price</StyledTableCell>
-                  <StyledTableCell sx={{ fontSize: 18 }}>
                     Quantity
                   </StyledTableCell>
+                  <StyledTableCell sx={{ fontSize: 18 }}>Price</StyledTableCell>
                   <StyledTableCell sx={{ fontSize: 18 }}>Total</StyledTableCell>
                   <StyledTableCell sx={{ fontSize: 18 }}>
                     Actions
                   </StyledTableCell>
                 </StyledTableRow>
               </TableHead>
-              {/* <TableBody>
+              <TableBody>
                 {(rowsPerPage > 0
                   ? // eslint-disable-next-line no-unsafe-optional-chaining
-                    products?.slice(
+                    addedProducts?.slice(
                       page * rowsPerPage,
                       page * rowsPerPage + rowsPerPage
                     )
                   : products
-                )?.map((product: ProductProps) => (
-                  <TableRow key={product?.productId}>
-                    <TableCell>{product?.productId}</TableCell>
-                    <TableCell>{product?.productName}</TableCell>
-                    <TableCell>{product?.productDescription}</TableCell>
-                    <TableCell>{product?.productPrice}</TableCell>
-                    <TableCell>{product?.category?.categoryTitle}</TableCell>
-                    <TableCell>
-                      {product?.productAvailability?.toString() === "true"
-                        ? "Yes"
-                        : "No"}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={
-                          product?.status.toLowerCase() === "true"
-                            ? "Active"
-                            : "Inactive"
-                        }
-                        size="medium"
-                        color={
-                          product?.status.toLowerCase() === "true"
-                            ? "success"
-                            : "error"
-                        }
-                      />
-                    </TableCell>
+                )?.map((product: TableProduct) => (
+                  <TableRow key={product?.id}>
+                    <TableCell>{product?.id}</TableCell>
+                    <TableCell>{product?.name}</TableCell>
+                    <TableCell>{product?.category}</TableCell>
+                    <TableCell>{product?.quantity}</TableCell>
+                    <TableCell>{product?.price}</TableCell>
+                    <TableCell>{product?.total}</TableCell>
                     <TableCell>
                       <DeleteIcon
-                        style={{ marginRight: 8 }}
-                        onClick={() =>
-                          handleDelete(product?.productId?.toString())
-                        }
+                        sx={{ cursor: "pointer" }}
+                        onClick={() => {
+                          handleDelete(product.id.toString());
+                          setAmount(
+                            (
+                              Number(amount) -
+                              Number(
+                                Number(product?.price) *
+                                  Number(product?.quantity)
+                              )
+                            ).toString()
+                          );
+                        }}
                       />
-                      <EditIcon />
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody> */}
+              </TableBody>
             </Table>
           </TableContainer>
-          {/* <TablePagination
+          <TablePagination
             rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
             component="div"
-            count={products?.length}
+            count={addedProducts?.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             labelRowsPerPage="Rows per page:"
-          /> */}
+          />
         </Paper>
       </Card>
     </>

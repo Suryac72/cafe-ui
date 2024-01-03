@@ -19,9 +19,15 @@ import { useProduct } from "../../hooks/useProduct";
 import Toaster from "../../../toaster/toaster";
 import Header from "../../../header/header";
 import { Category } from "../category/category";
-import AddProductModal from "../../../modal/add-product-modal";
+import AddProductModal, {
+  UpdateProduct,
+} from "../../../modal/add-product-modal";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import { useDeleteProduct } from "../../hooks/useDeleteProduct";
+import useImageDelete from "../../hooks/useImageDelete";
+import { fetchImageName } from "../../../../shared/utils";
+import { Image } from "@chakra-ui/react";
 
 export interface ProductProps {
   productId: number;
@@ -35,7 +41,7 @@ export interface ProductProps {
 }
 
 const Product: React.FC = () => {
-  const { products, isLoading, error } = useProduct();
+  const { products, isLoading, error, refetch } = useProduct();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -44,6 +50,15 @@ const Product: React.FC = () => {
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
   const [open, setOpen] = useState(false);
+  const [productId, setProductId] = useState("");
+  const [productToUpdate, setProductToUpdate] = useState<UpdateProduct>({});
+
+  const { handleDelete: handleImageDelete } = useImageDelete();
+  const {
+    error: deleteError,
+    isLoading: deleteLoading,
+    deleteProduct,
+  } = useDeleteProduct();
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#3559E0",
@@ -106,30 +121,32 @@ const Product: React.FC = () => {
   };
 
   const handleModalClose = () => {
+    setProductId(""); // Reset productId
+    setProductToUpdate({}); // Reset productToUpdate
     setOpen(false);
   };
 
-  const handleDelete = async (categoryId: string) => {
+  const handleDelete = async (productId: string, productPic: string) => {
     try {
-      // Delete the bill
-      // await deleteCategory(categoryId);
-
-      // refetch();
+      const imageName = fetchImageName(productPic);
+      await handleImageDelete(imageName);
+      await deleteProduct(productId);
+      refetch();
       setIsAlert(true);
       setSeverity("success");
       setAutoHideDuration(4000);
-      setAlertMessage("Category deleted successfully");
+      setAlertMessage("Product deleted successfully");
     } catch (error) {
       setIsAlert(true);
       setSeverity("error");
       setAutoHideDuration(4000);
-      // setAlertMessage(deleteError?.message || "");
+      setAlertMessage(deleteError?.message || "");
     }
   };
 
   return (
     <>
-      {isLoading && (
+      {(isLoading || deleteLoading) && (
         <StyledBackdrop open={isLoading}>
           <CircularProgress sx={useStyles.circularProgress} color="inherit" />
         </StyledBackdrop>
@@ -148,7 +165,12 @@ const Product: React.FC = () => {
         buttonText="Add Product"
         onButtonClick={() => setOpen(!open)}
       />
-      <AddProductModal open={open} onClose={handleModalClose} />
+      <AddProductModal
+        open={open}
+        onClose={handleModalClose}
+        productIdToUpdate={productId}
+        productToUpdateFields={productToUpdate}
+      />
       <Paper>
         <TableContainer>
           <Table>
@@ -156,6 +178,9 @@ const Product: React.FC = () => {
               <StyledTableRow>
                 <StyledTableCell sx={{ fontSize: 18 }}>
                   Product ID
+                </StyledTableCell>
+                <StyledTableCell sx={{ fontSize: 18 }}>
+                  Product Image
                 </StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>Name</StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>
@@ -181,6 +206,7 @@ const Product: React.FC = () => {
               )?.map((product: ProductProps) => (
                 <TableRow key={product?.productId}>
                   <TableCell>{product?.productId}</TableCell>
+                  <TableCell><Image src={product?.productPic} width='60%' height='50%'/></TableCell>
                   <TableCell>{product?.productName}</TableCell>
                   <TableCell>{product?.productDescription}</TableCell>
                   <TableCell>{product?.productPrice}</TableCell>
@@ -207,12 +233,22 @@ const Product: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <DeleteIcon
-                      style={{ marginRight: 8 }}
+                      style={{ marginRight: 8, cursor: "pointer" }}
                       onClick={() =>
-                        handleDelete(product?.productId?.toString())
+                        handleDelete(
+                          product?.productId?.toString(),
+                          product?.productPic
+                        )
                       }
                     />
-                    <EditIcon />
+                    <EditIcon
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setOpen(!open);
+                        setProductToUpdate(product);
+                        setProductId(product?.productId?.toString());
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

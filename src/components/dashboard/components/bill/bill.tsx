@@ -149,6 +149,7 @@ const Bill: React.FC = () => {
   const handleDownload = async (bill: Bill) => {
     try {
       // Download the bill
+      bill['isGenerated']='';
       await downloadBill(bill);
       setIsAlert(true);
       setSeverity("success");
@@ -161,6 +162,14 @@ const Bill: React.FC = () => {
       setAlertMessage(downloadError?.message || "");
     }
   };
+
+  useEffect(() => {
+    if(isAlert){
+      setTimeout(()=>{
+        setIsAlert(false)
+      },autoHideDuration)
+    }
+  },[isAlert, autoHideDuration, setIsAlert])
 
   return (
     <>
@@ -228,12 +237,12 @@ const Bill: React.FC = () => {
                   <TableCell>{bill?.paymentMethod}</TableCell>
                   <TableCell>
                     <VisibilityIcon
-                      style={{ marginRight: 8 }}
+                      style={{ marginRight: 3 }}
                       sx={{cursor:'pointer'}}
                       onClick={() => handleModal(bill?.billUUID)}
                     />
                     <DownloadIcon
-                      style={{ marginRight: 8 }}
+                      style={{ marginRight: 3 }}
                       sx={{cursor:'pointer'}}
                       onClick={() => handleDownload(bill)}
                     />

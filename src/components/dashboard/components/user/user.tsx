@@ -19,6 +19,7 @@ import Toaster from "../../../toaster/toaster";
 import Header from "../../../header/header";
 import { useUsers } from "../../../../hooks/useUsers";
 import Switch from "@mui/material/Switch";
+import LoginModal from "../../../modal/login-modal";
 import { useUpdateUser } from "../../../../hooks/useUpdateUser";
 export interface UserProps {
   userId: number;
@@ -31,15 +32,16 @@ export interface UserProps {
 
 const User: React.FC = () => {
   const { users, isLoading, error } = useUsers();
-
+  const [open, setOpen] = useState<boolean>(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [isAlert, setIsAlert] = useState(false);
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
+  const [isLogin, setIsLogin] = useState<boolean>(false);
   const { updateUser, isLoading: loading } = useUpdateUser();
-
+  
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#3559E0",
@@ -142,9 +144,11 @@ const User: React.FC = () => {
         title="Manage users"
         buttonText="Add user"
         onButtonClick={() => {
-          console.log("clicked");
+          setOpen(!open);
         }}
+        isDisabled={false}
       />
+       <LoginModal open={open} setOpen={setOpen} isLogin={isLogin} modalText="Add User" />
       <Paper>
         <TableContainer>
           <Table>
@@ -178,7 +182,11 @@ const User: React.FC = () => {
                     <Chip
                       label={user?.role}
                       size="small"
-                      color={user?.role?.toUpperCase() === "USER" ? "primary" : "success"}
+                      color={
+                        user?.role?.toUpperCase() === "USER"
+                          ? "primary"
+                          : "success"
+                      }
                     />
                   </TableCell>
                   <TableCell>

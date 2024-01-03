@@ -2,6 +2,7 @@ import './app.component.scss';
 import Navbar from './components/navbar/navbar';
 
 function App() {
+  
   return (
     <div>
       <Navbar/>

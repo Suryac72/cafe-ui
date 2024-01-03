@@ -35,4 +35,5 @@ export const status = [
   }
 ]
 
+export const pages = ["Login", "Signup", "Forgot Password?"];
 
