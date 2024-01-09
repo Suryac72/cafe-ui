@@ -151,6 +151,7 @@ const Bill: React.FC = () => {
     try {
       // Download the bill
       bill['isGenerated']='';
+      bill['billUUID'] = '';
       await downloadBill(bill);
       setIsAlert(true);
       setSeverity("success");
