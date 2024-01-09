@@ -1,30 +1,38 @@
-# React + TypeScript + Vite
+# Cafe Management System UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Cafe Management System is a web application developed with React and Vite, designed to streamline and manage various aspects of a cafe business.
 
-Currently, two official plugins are available:
+## Table of Contents
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [Features](#features)
+- [Getting Started](#getting-started)
+- [Folder Structure](#folder-structure)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **User Authentication:** Secure login and authentication for cafe staff.
+- **Product Management:** Easily add, update, and manage cafe products.
+- **Order Tracking:** Efficiently track and manage customer orders.
+- **Category Management:** Organize products into categories for better management.
+- **Billing:** Generate bills and receipts for customer orders.
+- **User Roles:** Different roles for staff members with varying permissions.
 
-- Configure the top-level `parserOptions` property like this:
+## Getting Started
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+### Prerequisites
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- Node.js (version X.X.X)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/suryac72/cafe-ui.git
+
+### Deployed Links
+ - https://cafe-management-system-ui.vercel.app/
