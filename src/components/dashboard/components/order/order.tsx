@@ -26,7 +26,7 @@ import { useForm, SubmitHandler, UseFormRegister } from "react-hook-form";
 import Header from "../../../header/header";
 import PrintIcon from "@mui/icons-material/Print";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
-import { paymentMethods } from "../../../../shared/constants";
+import { ROWS_PER_PAGE, paymentMethods } from "../../../../shared/constants";
 import { useProduct } from "../../hooks/useProduct";
 import { useCategory } from "../../hooks/useCategory";
 import { ProductProps } from "../product/product";
@@ -567,7 +567,7 @@ const Order = () => {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Rows per page:"
+            labelRowsPerPage={ROWS_PER_PAGE}
           />
         </Paper>
       </Card>

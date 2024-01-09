@@ -5,20 +5,16 @@ import React from "react";
 import Dashboard from "./components/dashboard/dashboard";
 import Home from "./components/home/home";
 import { QueryClient, QueryClientProvider } from "react-query";
-import ProfileModal from "./components/modal/profile-modal";
-
+import { ROUTES } from "./shared/constants";
+import { Provider } from "jotai";
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: ROUTES.ROOT,
     element: <Home />,
   },
   {
-    path: "/dashboard",
+    path: ROUTES.DASHBOARD,
     element: <Dashboard />,
-  },
-  {
-    path: "/profile",
-    element: <ProfileModal/>,
   },
 ]);
 const queryClient = new QueryClient();
@@ -26,7 +22,9 @@ const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <Provider>
+        <RouterProvider router={router} />
+      </Provider>
     </QueryClientProvider>
   </React.StrictMode>
 );

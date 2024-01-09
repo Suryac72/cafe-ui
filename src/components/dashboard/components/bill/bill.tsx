@@ -23,6 +23,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import TableModal from "../../../modal/table-modal";
 import { useBillDelete } from "../../hooks/useBillDelete";
 import { useBillDownload } from "../../hooks/useBillDownload";
+import { ROWS_PER_PAGE } from "../../../../shared/constants";
 
 export interface Bill {
   billId: number;
@@ -264,7 +265,7 @@ const Bill: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Rows per page:"
+          labelRowsPerPage={ROWS_PER_PAGE}
         />
       </Paper>
     </>

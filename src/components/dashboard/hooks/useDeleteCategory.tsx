@@ -41,7 +41,7 @@ export function useDeleteCategory() {
       try {
         return await deleteMutation.mutateAsync(categoryId);
       } catch (error) {
-        throw new Error(error.message || "Login Failed");
+        return error;
       }
     },
     isLoading: deleteMutation.isLoading,

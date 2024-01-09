@@ -4,14 +4,12 @@ import {
   Button,
   Container,
   CssBaseline,
-  FormControlLabel,
   Grid,
   TextField,
   Typography,
   ThemeProvider,
   Modal,
   Link,
-  Checkbox,
   CircularProgress,
   AlertColor,
 } from "@mui/material";
@@ -24,12 +22,14 @@ import { useEffect, useState } from "react";
 import { useLogin } from "../../hooks/useLogin";
 import Toaster from "../toaster/toaster";
 import { useNavigate } from "react-router-dom";
+import ForgotPasswordModal from "./forgot-password-modal";
 
 interface LoginModalProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isLogin: boolean;
   modalText?: string;
+  setIsLogin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 interface AuthFormFields {
@@ -47,6 +47,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   setOpen,
   isLogin,
   modalText,
+  setIsLogin,
 }) => {
   const { registerUser, isLoading, error } = useSignUp();
   const { loginUser, isLoading: isLoginLoading } = useLogin();
@@ -54,6 +55,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const [severity, setSeverity] = useState<AlertColor>("info");
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
+  const [isForgotPassword,setIsForgotPassword] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -157,6 +159,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
           alertMessage={alertMessage}
         />
       )}
+      <ForgotPasswordModal  open={isForgotPassword} setOpen={setIsForgotPassword}/>
       <Modal open={open} onClose={() => setOpen(false)}>
         <ModalDialog>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -261,7 +264,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                       type="submit"
                       fullWidth
                       variant="contained"
-                      sx={{ mb: 2,mt:2 }}
+                      sx={{ mb: 2, mt: 2 }}
                     >
                       {isLoading || isLoginLoading ? (
                         <CircularProgress color="inherit" />
@@ -274,16 +277,20 @@ const LoginModal: React.FC<LoginModalProps> = ({
                     {!modalText && (
                       <Grid container>
                         <Grid item xs>
+                          <div onClick={()=>{setOpen(!open);setIsForgotPassword(true)}}>
                           <Link href="#" variant="body2">
                             Forgot password?
                           </Link>
+                          </div>
                         </Grid>
                         <Grid item>
-                          <Link href="#" variant="body2">
-                            {isLogin
-                              ? "Don't have an account? Sign Up"
-                              : "Already have an account? Sign In"}
-                          </Link>
+                          <div onClick={() => setIsLogin(!isLogin)}>
+                            <Link href="#" variant="body2">
+                              {isLogin
+                                ? "Don't have an account? Sign Up"
+                                : "Already have an account? Sign In"}
+                            </Link>
+                          </div>
                         </Grid>
                       </Grid>
                     )}

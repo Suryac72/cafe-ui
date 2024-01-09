@@ -20,25 +20,12 @@ import {
 } from "../dashboard/hooks/useAddProduct";
 import { useCategory } from "../dashboard/hooks/useCategory";
 import { DropDown } from "../../shared/models/order";
-import { Category } from "../dashboard/components/category/category";
 import { availability, status } from "../../shared/constants";
 import Toaster from "../toaster/toaster";
 import { VisuallyHiddenInput } from "@chakra-ui/react";
 import { useUpdateProduct } from "../dashboard/hooks/useUpdateProduct";
-
-export interface UpdateProduct {
-  productId?: string;
-  productName?: string;
-  productDescription?: string;
-  productPic?: string;
-  productAvailability?: string;
-  productPrice?: string;
-  productQuantity?: string;
-  status?: string;
-  categoryName?: string;
-  category?:string;
-  categoryId?: string;
-}
+import { UpdateProduct } from "../../shared/models/product";
+import { Category } from "../../shared/models/category";
 
 const AddProductModal: React.FC<{
   open: boolean;
@@ -175,7 +162,7 @@ const AddProductModal: React.FC<{
           productQuantity: payload.productQuantity,
           category: JSON.stringify(category),
           productId: productIdToUpdate,
-          status: payload?.status
+          status: payload?.status,
         };
         await updateProduct(updatePayload);
       } else {
@@ -198,7 +185,7 @@ const AddProductModal: React.FC<{
       setAutoHideDuration(4000);
       setAlertMessage(productError?.message || updateError?.message);
     }
-  }
+  };
 
   useEffect(() => {
     const categoryResponse = categories?.map((category: Category) => {

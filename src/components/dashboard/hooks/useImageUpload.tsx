@@ -19,7 +19,7 @@ const useImageUpload = () => {
 
       return await response.json();
     } catch (error) {
-      throw new Error(`Error uploading file: ${error.message}`);
+      return error;
     }
   };
 

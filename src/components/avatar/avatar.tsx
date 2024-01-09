@@ -11,8 +11,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Setting, getJwtToken, logout } from "../../shared/utils";
 import { deepOrange } from "@mui/material/colors";
-
-
+import ProfileModal from "../modal/profile-modal";
+import { LABELS, ROUTES } from "../../shared/constants";
 
 interface AvatarProps {
   settings: Setting[];
@@ -22,20 +22,24 @@ interface AvatarProps {
 const NavAvatar = ({ settings, avatarText }: AvatarProps) => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
-
+  const [open, setOpen] = useState<boolean>(false);
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
 
   const handleCloseUserMenu = (route: string) => {
-    if (route === "/") {
+    if (route === ROUTES.ROOT) {
       const { userData } = getJwtToken();
       logout(userData);
     }
-    navigate(route);
-    setAnchorElUser(null);
+    if (route !== ROUTES.PROFILE) {
+      navigate(route);
+      setAnchorElUser(null);
+    }
   };
   return (
+    <>
+      <ProfileModal open={open} setOpen={setOpen} />
       <Box sx={{ flexGrow: 0 }}>
         <Tooltip title="Open settings">
           <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
@@ -63,13 +67,20 @@ const NavAvatar = ({ settings, avatarText }: AvatarProps) => {
               key={key}
               onClick={() => handleCloseUserMenu(setting.route)}
             >
-              <Link to={setting.route}>
-                <Typography textAlign="center">{setting.label}</Typography>
-              </Link>
+              {setting.label === LABELS.PROFILE ? (
+                <Typography textAlign="center" onClick={() => setOpen(!open)}>
+                  {setting.label}
+                </Typography>
+              ) : (
+                <Link to={setting.route}>
+                  <Typography textAlign="center">{setting.label}</Typography>
+                </Link>
+              )}
             </MenuItem>
           ))}
         </Menu>
       </Box>
+    </>
   );
 };
 

@@ -18,29 +18,20 @@ import {
 import { useProduct } from "../../hooks/useProduct";
 import Toaster from "../../../toaster/toaster";
 import Header from "../../../header/header";
-import { Category } from "../category/category";
 import AddProductModal, {
   UpdateProduct,
 } from "../../../modal/add-product-modal";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useDeleteProduct } from "../../hooks/useDeleteProduct";
-import useImageDelete from "../../hooks/useImageDelete";
-import { fetchImageName } from "../../../../shared/utils";
 import { Image } from "@chakra-ui/react";
+import { ROLES, ROWS_PER_PAGE } from "../../../../shared/constants";
+import { ProductProps } from "../../../../shared/models/product";
 
-export interface ProductProps {
-  productId: number;
-  productName: string;
-  productDescription: string;
-  productPic: string;
-  productPrice: string;
-  productAvailability: boolean;
-  status: string;
-  category: Category;
+interface ProductParams {
+  role?: string;
 }
-
-const Product: React.FC = () => {
+const Product: React.FC = ({ role }: ProductParams) => {
   const { products, isLoading, error, refetch } = useProduct();
 
   const [page, setPage] = useState(0);
@@ -53,7 +44,6 @@ const Product: React.FC = () => {
   const [productId, setProductId] = useState("");
   const [productToUpdate, setProductToUpdate] = useState<UpdateProduct>({});
 
-  const { handleDelete: handleImageDelete } = useImageDelete();
   const {
     error: deleteError,
     isLoading: deleteLoading,
@@ -126,10 +116,8 @@ const Product: React.FC = () => {
     setOpen(false);
   };
 
-  const handleDelete = async (productId: string, productPic: string) => {
+  const handleDelete = async (productId: string) => {
     try {
-      const imageName = fetchImageName(productPic);
-      await handleImageDelete(imageName);
       await deleteProduct(productId);
       refetch();
       setIsAlert(true);
@@ -161,9 +149,10 @@ const Product: React.FC = () => {
         />
       )}
       <Header
-        title="Manage Products"
-        buttonText="Add Product"
+        title={role === ROLES.ADMIN ? "Manage Products" : "View Products"}
+        buttonText={role === ROLES.ADMIN ? "Add Product" : ""}
         onButtonClick={() => setOpen(!open)}
+        isDisabled={!(role === ROLES.ADMIN)}
       />
       <AddProductModal
         open={open}
@@ -192,7 +181,11 @@ const Product: React.FC = () => {
                   Availability
                 </StyledTableCell>
                 <StyledTableCell sx={{ fontSize: 18 }}>Status</StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Actions</StyledTableCell>
+                {role === ROLES.ADMIN && (
+                  <StyledTableCell sx={{ fontSize: 18 }}>
+                    Actions
+                  </StyledTableCell>
+                )}
               </StyledTableRow>
             </TableHead>
             <TableBody>
@@ -206,7 +199,9 @@ const Product: React.FC = () => {
               )?.map((product: ProductProps) => (
                 <TableRow key={product?.productId}>
                   <TableCell>{product?.productId}</TableCell>
-                  <TableCell><Image src={product?.productPic} width='60%' height='50%'/></TableCell>
+                  <TableCell>
+                    <Image src={product?.productPic} width="60%" height="50%" />
+                  </TableCell>
                   <TableCell>{product?.productName}</TableCell>
                   <TableCell>{product?.productDescription}</TableCell>
                   <TableCell>{product?.productPrice}</TableCell>
@@ -231,25 +226,26 @@ const Product: React.FC = () => {
                       }
                     />
                   </TableCell>
-                  <TableCell>
-                    <DeleteIcon
-                      style={{ marginRight: 8, cursor: "pointer" }}
-                      onClick={() =>
-                        handleDelete(
-                          product?.productId?.toString(),
-                          product?.productPic
-                        )
-                      }
-                    />
-                    <EditIcon
-                      style={{ cursor: "pointer" }}
-                      onClick={() => {
-                        setOpen(!open);
-                        setProductToUpdate(product);
-                        setProductId(product?.productId?.toString());
-                      }}
-                    />
-                  </TableCell>
+                  {role === ROLES.ADMIN && (
+                    <TableCell>
+                      <DeleteIcon
+                        style={{ marginRight: 8, cursor: "pointer" }}
+                        onClick={() =>
+                          handleDelete(
+                            product?.productId?.toString()
+                          )
+                        }
+                      />
+                      <EditIcon
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          setOpen(!open);
+                          setProductToUpdate(product);
+                          setProductId(product?.productId?.toString());
+                        }}
+                      />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -263,7 +259,7 @@ const Product: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Rows per page:"
+          labelRowsPerPage={ROWS_PER_PAGE}
         />
       </Paper>
     </>

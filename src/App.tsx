@@ -1,11 +1,11 @@
-import './app.component.scss';
-import Navbar from './components/navbar/navbar';
+import { Home } from '@mui/icons-material';
+
 
 function App() {
   
   return (
-    <div>
-      <Navbar/>
+    <div className='app'>
+      <Home/>
     </div>
   );
 }

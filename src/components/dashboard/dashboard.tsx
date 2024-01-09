@@ -27,8 +27,15 @@ import Product from "./components/product/product";
 import Bill from "./components/bill/bill";
 import User from "./components/user/user";
 import Order from "./components/order/order";
+import {
+  ALERT_COLOR_INFO,
+  DASHBOARD_ITEMS,
+  DRAWER_WIDTH,
+  ROLES,
+  TOASTER_SEVERITY_WARNING,
+} from "../../shared/constants";
 
-const drawerWidth = 240;
+const drawerWidth = DRAWER_WIDTH;
 
 interface Props {
   window?: () => Window;
@@ -38,34 +45,34 @@ export default function Dashboard(props: Props) {
   const { window } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isAlert, setIsAlert] = useState(false);
-  const [severity, setSeverity] = useState<AlertColor>("info");
+  const [severity, setSeverity] = useState<AlertColor>(ALERT_COLOR_INFO);
   const [autoHideDuration, setAutoHideDuration] = useState(3000);
   const [alertMessage, setAlertMessage] = useState("");
   const { userData, expired } = getJwtToken();
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const dashboardItems = [
     {
-      label: "Dashboard",
+      label: DASHBOARD_ITEMS.DASHBOARD,
       component: <SpaceDashboardIcon />,
     },
     {
-      label: "Manage Category",
+      label: DASHBOARD_ITEMS.MANAGE_CATEGORY,
       component: <CategoryIcon />,
     },
     {
-      label: "Manage Product",
+      label: DASHBOARD_ITEMS.MANAGE_PRODUCT,
       component: <Inventory2Icon />,
     },
     {
-      label: "Manage Order",
+      label: DASHBOARD_ITEMS.MANAGE_ORDER,
       component: <ShoppingCartIcon />,
     },
     {
-      label: "View Bill",
+      label: DASHBOARD_ITEMS.VIEW_BILL,
       component: <ReceiptLongIcon />,
     },
     {
-      label: "Manage Users",
+      label: DASHBOARD_ITEMS.MANAGE_USERS,
       component: <PeopleAltIcon />,
     },
   ];
@@ -73,22 +80,22 @@ export default function Dashboard(props: Props) {
   const renderComponent = () => {
     // Add logic to render the component based on the selected item
     switch (selectedItem) {
-      case "Dashboard":
+      case DASHBOARD_ITEMS.DASHBOARD:
         return <Home />;
-      case "Manage Category":
-        return <Category/>
+      case DASHBOARD_ITEMS.MANAGE_CATEGORY:
+        return <Category role={userData?.role} />;
 
-      case "Manage Product":
-        return <Product/>;
+      case DASHBOARD_ITEMS.MANAGE_PRODUCT:
+        return <Product role={userData?.role} />;
 
-      case "Manage Order":
-        return <Order/>;
+      case DASHBOARD_ITEMS.MANAGE_ORDER:
+        return <Order />;
 
-      case "View Bill":
-        return <Bill/>;
+      case DASHBOARD_ITEMS.VIEW_BILL:
+        return <Bill />;
 
-      case "Manage Users":
-        return <User/>;
+      case DASHBOARD_ITEMS.MANAGE_USERS:
+        return <User />;
 
       default:
         return <Home />;
@@ -106,7 +113,7 @@ export default function Dashboard(props: Props) {
   useEffect(() => {
     if (expired) {
       setIsAlert(true);
-      setSeverity("warning");
+      setSeverity(TOASTER_SEVERITY_WARNING);
       setAutoHideDuration(4000);
       setAlertMessage("Session Expired!! Please Login Again!");
       logout(userData);
@@ -118,17 +125,20 @@ export default function Dashboard(props: Props) {
       <Toolbar />
       <Divider />
       <List>
-        {dashboardItems.map((items, index) => (
-          <ListItem key={index} disablePadding>
-            <ListItemButton
-              selected={selectedItem === items.label}
-              onClick={() => handleListItemClick(items.label)}
-            >
-              <ListItemIcon>{items.component}</ListItemIcon>
-              <ListItemText primary={items.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {dashboardItems.map((items, index) =>
+          userData?.role !== ROLES.ADMIN &&
+          items.label === DASHBOARD_ITEMS.MANAGE_USERS ? null : (
+            <ListItem key={index} disablePadding>
+              <ListItemButton
+                selected={selectedItem === items.label}
+                onClick={() => handleListItemClick(items.label)}
+              >
+                <ListItemIcon>{items.component}</ListItemIcon>
+                <ListItemText primary={items.label} />
+              </ListItemButton>
+            </ListItem>
+          )
+        )}
       </List>
     </div>
   );

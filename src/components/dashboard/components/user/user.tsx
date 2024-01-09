@@ -21,6 +21,8 @@ import { useUsers } from "../../../../hooks/useUsers";
 import Switch from "@mui/material/Switch";
 import LoginModal from "../../../modal/login-modal";
 import { useUpdateUser } from "../../../../hooks/useUpdateUser";
+import { ROWS_PER_PAGE } from "../../../../shared/constants";
+
 export interface UserProps {
   userId: number;
   userName: string;
@@ -148,7 +150,7 @@ const User: React.FC = () => {
         }}
         isDisabled={false}
       />
-       <LoginModal open={open} setOpen={setOpen} isLogin={isLogin} modalText="Add User" />
+       <LoginModal open={open} setOpen={setOpen} isLogin={isLogin} modalText="Add User" setIsLogin={setIsLogin}/>
       <Paper>
         <TableContainer>
           <Table>
@@ -217,7 +219,7 @@ const User: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Rows per page:"
+          labelRowsPerPage={ROWS_PER_PAGE}
         />
       </Paper>
     </>

@@ -16,6 +16,7 @@ import {
   tableCellClasses,
 } from "@mui/material";
 import { useState } from "react";
+import { ROWS_PER_PAGE } from "../../shared/constants";
 
 interface Order {
   id: string;
@@ -148,7 +149,7 @@ const TableModal = ({ productDetails, open, isLoading,onClose }: TableModalProps
               page={page}
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
-              labelRowsPerPage="Rows per page:"
+              labelRowsPerPage={ROWS_PER_PAGE}
             />
           </Paper>
         </ModalDialog>

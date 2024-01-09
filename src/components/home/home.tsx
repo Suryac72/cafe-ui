@@ -1,9 +1,12 @@
-import Navbar from '../navbar/navbar'
-
+import Navbar from "../navbar/navbar";
+import HeroImage from "./components/hero-image";
 const Home = () => {
   return (
-    <Navbar/>
-  )
-}
+    <>
+      <Navbar />
+      <HeroImage/>
+    </>
+  );
+};
 
-export default Home
+export default Home;

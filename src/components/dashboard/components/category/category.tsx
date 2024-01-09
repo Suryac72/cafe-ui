@@ -23,14 +23,17 @@ import AddCategoryModal, {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useDeleteCategory } from "../../hooks/useDeleteCategory";
-
-export interface Category {
-  categoryId: number;
-  categoryTitle: string;
-  categoryDescription: string;
+import {
+  ROLES,
+  ROWS_PER_PAGE,
+  TABLE_HEADER_COLOR,
+} from "../../../../shared/constants";
+import { Category } from "../../../../shared/models/category";
+interface CategoryProps {
+  role?: string;
 }
 
-const Category: React.FC = () => {
+const Category: React.FC = ({ role }: CategoryProps) => {
   const { categories, isLoading, error, refetch } = useCategory();
 
   const [page, setPage] = useState(0);
@@ -46,10 +49,12 @@ const Category: React.FC = () => {
     error: deleteError,
   } = useDeleteCategory();
   const [categoryId, setCategoryId] = useState("");
-  const [categoryToUpdate, setCategoryToUpdate] = useState<UpdateCategory>({});
+  const [categoryToUpdate, setCategoryToUpdate] = useState<UpdateCategory>(
+    {} as UpdateCategory
+  );
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
-      backgroundColor: "#3559E0",
+      backgroundColor: TABLE_HEADER_COLOR,
       color: theme.palette.common.white,
     },
     [`&.${tableCellClasses.body}`]: {
@@ -147,13 +152,14 @@ const Category: React.FC = () => {
         />
       )}
       <Header
-        title="Manage Categories"
-        buttonText="Add Category"
+        title={role === ROLES.ADMIN ? "Manage Categories" : "View Categories"}
+        buttonText={role === ROLES.ADMIN ? "Add Category" : ""}
         onButtonClick={() => {
           setOpen(!open);
           setCategoryId("");
-          setCategoryToUpdate({});
+          setCategoryToUpdate({} as UpdateCategory);
         }}
+        isDisabled={!(role === ROLES.ADMIN)}
       />
       <AddCategoryModal
         open={open}
@@ -174,7 +180,11 @@ const Category: React.FC = () => {
                 <StyledTableCell sx={{ fontSize: 18 }}>
                   Description
                 </StyledTableCell>
-                <StyledTableCell sx={{ fontSize: 18 }}>Actions</StyledTableCell>
+                {role === ROLES.ADMIN && (
+                  <StyledTableCell sx={{ fontSize: 18 }}>
+                    Actions
+                  </StyledTableCell>
+                )}
               </StyledTableRow>
             </TableHead>
             <TableBody>
@@ -190,23 +200,25 @@ const Category: React.FC = () => {
                   <TableCell>{category?.categoryId}</TableCell>
                   <TableCell>{category?.categoryTitle}</TableCell>
                   <TableCell>{category?.categoryDescription}</TableCell>
-                  <TableCell>
-                    <DeleteIcon
-                      style={{ marginRight: 8 }}
-                      sx={{ cursor: "pointer" }}
-                      onClick={() =>
-                        handleDelete(category?.categoryId?.toString())
-                      }
-                    />
-                    <EditIcon
-                      sx={{ cursor: "pointer" }}
-                      onClick={() => {
-                        setOpen(!open);
-                        setCategoryToUpdate(category);
-                        setCategoryId(category?.categoryId?.toString());
-                      }}
-                    />
-                  </TableCell>
+                  {role === ROLES.ADMIN && (
+                    <TableCell>
+                      <DeleteIcon
+                        style={{ marginRight: 8 }}
+                        sx={{ cursor: "pointer" }}
+                        onClick={() =>
+                          handleDelete(category?.categoryId?.toString())
+                        }
+                      />
+                      <EditIcon
+                        sx={{ cursor: "pointer" }}
+                        onClick={() => {
+                          setOpen(!open);
+                          setCategoryToUpdate(category);
+                          setCategoryId(category?.categoryId?.toString());
+                        }}
+                      />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -220,7 +232,7 @@ const Category: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Rows per page:"
+          labelRowsPerPage={ROWS_PER_PAGE}
         />
       </Paper>
     </>

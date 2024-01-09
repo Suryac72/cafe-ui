@@ -19,6 +19,7 @@ import Toaster from "../toaster/toaster";
 import { UserData, getJwtToken, logout } from "../../shared/utils";
 import { useNavigate } from "react-router-dom";
 import { pages } from "../../shared/constants";
+import ForgotPasswordModal from "../modal/forgot-password-modal";
 
 const Navbar: React.FC = () => {
   const [open, setOpen] = useState<boolean>(false);
@@ -31,6 +32,7 @@ const Navbar: React.FC = () => {
   const [userData, setUserData] = useState<UserData | undefined>();
   const [expired, setExpired] = useState<boolean | undefined>(true);
   const [profile, setProfile] = useState(false);
+  const [isForgotPassword,setIsForgotPassword] = useState(false);
   const navigate = useNavigate();
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -78,6 +80,10 @@ const Navbar: React.FC = () => {
         setIsLogin(false);
         return;
       }
+      case "Forgot Password?" : {
+        setIsForgotPassword(true);
+        return;
+      }
     }
   };
 
@@ -116,10 +122,11 @@ const Navbar: React.FC = () => {
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <img
-            className="hidden lg:block"
+            className="hidden lg:block cursor-pointer"
             src={Logo}
             width={"40px"}
             alt="..."
+            onClick={()=>navigate('/')}
           />
           <Typography
             variant="h6"
@@ -219,7 +226,8 @@ const Navbar: React.FC = () => {
               avatarText={userData?.sub?.toUpperCase().charAt(0)}
             />
           )}
-          <LoginModal open={open} setOpen={setOpen} isLogin={isLogin} />
+          <LoginModal open={open} setOpen={setOpen} isLogin={isLogin} setIsLogin={setIsLogin}/>
+          <ForgotPasswordModal  open={isForgotPassword} setOpen={setIsForgotPassword}/>
         </Toolbar>
       </Container>
     </AppBar>

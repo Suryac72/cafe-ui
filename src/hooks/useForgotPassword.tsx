@@ -2,21 +2,18 @@ import { useMutation, useQueryClient } from "react-query";
 import { useCafeBaseUrl } from "../shared/hooks/useCafeBaseUrl";
 
 interface FormFields {
-  userName?: string;
   userEmail?: string;
-  password?: string;
-  userPhoneNo?: string;
 }
 
-export function useLogin() {
+export function useForgotPassword() {
   const baseUrl = useCafeBaseUrl();
 
   function buildApiEndpoint() {
-    const url = baseUrl + "/user/login";
+    const url = baseUrl + "/user/forgotPassword";
     return url;
   }
 
-  const loginUser = async (formData: FormFields) => {
+  const forgotPassword = async (formData: FormFields) => {
     const url = buildApiEndpoint();
     const response = await fetch(url, {
       method: "POST",
@@ -28,15 +25,14 @@ export function useLogin() {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Login Failed");
+      throw new Error(errorData.message || "Something went wrong");
     }
 
     return response.json();
   };
-
   const queryClient = useQueryClient();
 
-  const loginMutation = useMutation(loginUser, {
+  const forgotPasswordMutation = useMutation(forgotPassword, {
     onSuccess: (data) => {
       const token = data.token;
       localStorage.setItem("token", token);
@@ -45,14 +41,14 @@ export function useLogin() {
   });
 
   return {
-    loginUser: async (formData: FormFields) => {
+    forgotPassword: async (formData: FormFields) => {
       try {
-        return await loginMutation.mutateAsync(formData);
+        return await forgotPasswordMutation.mutateAsync(formData);
       } catch (error) {
-        return error;
+         return error;
       }
     },
-    isLoading: loginMutation.isLoading,
-    error: loginMutation.error,
+    isLoading: forgotPasswordMutation.isLoading,
+    error: forgotPasswordMutation.error,
   };
 }

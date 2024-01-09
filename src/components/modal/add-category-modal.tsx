@@ -17,12 +17,9 @@ import {
 } from "../dashboard/hooks/useAddCategory";
 import Toaster from "../toaster/toaster";
 import { useUpdateCategory } from "../dashboard/hooks/useUpdateCategory";
+import { UpdateCategory } from "../../shared/models/category";
 
-export interface UpdateCategory {
-  categoryId: string;
-  categoryTitle?: string;
-  categoryDescription?: string;
-}
+
 
 const AddCategoryModal: React.FC<{
   open: boolean;
