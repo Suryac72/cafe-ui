@@ -12,11 +12,8 @@ export function useBillDownload() {
 
   const downloadBill = async (bill: Bill) => {
     let url = buildApiEndpoint();
-    if (bill.billUUID && bill.isGenerated) {
-      url += `/getPdf`;
-    } else {
-      url += `/generateReport`;
-    }
+    url += `/generateReport`;
+    
     const token = localStorage.getItem("token");
     const response = await fetch(url, {
       method: "POST",
